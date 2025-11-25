@@ -10,7 +10,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&family=Courier+Prime:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700;900&family=Courier+Prime:wght@400;700&display=swap');
         
         body { font-family: 'Roboto', sans-serif; }
         
@@ -21,6 +21,15 @@
             background-color: white;
             margin: 0 auto 2rem auto;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .technical-text {
+            text-align: justify;
+            line-height: 1.4;
+            font-size: 10px;
+            color: #4b5563;
         }
 
         @media print {
@@ -36,6 +45,7 @@
                 box-shadow: none; 
                 break-after: page; 
                 page-break-after: always; 
+                height: 297mm;
             }
         }
     </style>
@@ -44,9 +54,10 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useMemo } = React;
         
-        // Dados estáticos
+        // --- CONSTANTES E DADOS ---
+
         const SAAM_BRANCHES = [
             { id: 'riogrande', city: 'RIO GRANDE - RS', cnpj: '05.436.047/0008-92', address: 'AVENIDA ALMIRANTE MAXIMIANO FONSECA, 3965' },
             { id: 'santos', city: 'SANTOS - SP', cnpj: '05.436.047/0001-16', address: 'RUA DO COMÉRCIO, 54 - CENTRO' },
@@ -63,11 +74,19 @@
             DEUTZ: { name: 'DEUTZ', color: 'blue', hex: '#2563eb', secondary: 'red', logoText: 'WEICHAI DEUTZ', paint: 'Azul Motor Deutz' }
         };
 
+        // TEXTOS PADRÃO (ENCHAÇÃO DE LINGUIÇA)
+        const BOILERPLATE = {
+            recebimento: "O motor foi recebido para desmontagem e análise preliminar. Durante o processo de recebimento, foram realizadas fotos iniciais, registrando a condição do motor no momento de sua chegada, a fim de documentar possíveis danos ou desgastes visíveis. Esses registros servirão como base para comparação com o estado final após a retífica.",
+            desmontagem: "O motor foi completamente desmontado, e todas as peças foram inspecionadas minuciosamente em busca de desgastes, danos ou falhas. Durante a desmontagem, foram registrados os números de série das peças para garantir a rastreabilidade e facilitar a identificação de qualquer componente com defeito. A inspeção detalhada permite avaliar a necessidade de substituição de peças ou reparos adicionais antes de prosseguir com o processo de retífica.",
+            limpeza: "Após a desmontagem, todas as peças do motor foram submetidas a um processo de limpeza detalhada para remoção de resíduos e contaminações. Em seguida, as peças foram encaminhadas para os setores responsáveis pela análise de conformidade. A inspeção focou nas especificações dos seguintes componentes: cabeçote, bloco, virabrequim, bielas e comando. O objetivo foi verificar se as peças estavam dentro das tolerâncias e condições exigidas para garantir a qualidade e a funcionalidade do motor após a retífica.",
+            metrologia: "As peças do motor foram analisadas conforme as especificações do fabricante, utilizando equipamentos de medição de alta precisão para garantir que todas as peças atendam às tolerâncias técnicas exigidas. O controle dimensional incluiu as seguintes medições: Altura do Cabeçote, Diâmetro dos Mancais do Virabrequim, Altura das Camisas, Altura das Válvulas, Folga dos Pistões nos Cilindros e Folga das Bronzinas.",
+            montagem: "Após a validação e a substituição das peças necessárias, o motor foi montado de acordo com as especificações técnicas do fabricante. Todos os componentes foram montados com atenção meticulosa aos detalhes, garantindo que o motor estivesse em condições ideais para os testes de performance subsequentes.",
+            finalizacao: "Após a conclusão dos testes de performance, o motor passou pelos acabamentos finais, que incluíram o processo de pintura para garantir a proteção contra corrosão e desgaste. A pintura foi realizada com materiais de alta qualidade, adequados para as condições de operação do motor. Após a finalização da pintura, o motor foi cuidadosamente embalado e paletizado para garantir sua segurança durante o transporte."
+        };
+
         const METROLOGY_PROFILES = {
             '3056': {
-                brand: 'CAT',
-                cylinders: 6,
-                mainBearings: 7,
+                brand: 'CAT', cylinders: 6, mainBearings: 7,
                 defaults: {
                     munhoes: [76.14, 76.17, 76.17, 76.17, 76.17, 76.17, 76.17],
                     moentes: [63.45, 63.45, 63.45, 63.45, 63.45, 63.45],
@@ -76,36 +95,30 @@
                     alturaPistao: [0.51, 0.57, 0.59, 0.56, 0.50, 0.55],
                     folgaPistao: [0.12, 0.11, 0.12, 0.12, 0.12, 0.12],
                     alturaCamisa: [0.05, 0.04, 0.05, 0.05, 0.04, 0.05],
-                    alturaValvula: [1.50, 1.50, 1.50, 1.50, 1.50, 1.50], 
-                    folgaGuia: [0.03, 0.03, 0.03, 0.03, 0.03, 0.03],     
-                    medidaCabecote: "STD", 
-                    folgaAxial: 0.21,
+                    alturaValvula: [1.50, 1.50, 1.50, 1.50, 1.50, 1.50],
+                    folgaGuia: [0.03, 0.03, 0.03, 0.03, 0.03, 0.03],
+                    medidaCabecote: "STD", folgaAxial: 0.21,
                     folgaBuchaComando: [0.13, 0.13, 0.13, 0.13, 0.13, 0.13]
                 }
             },
             'C4.4': {
-                brand: 'CAT',
-                cylinders: 4,
-                mainBearings: 5,
+                brand: 'CAT', cylinders: 4, mainBearings: 5,
                 defaults: {
-                    munhoes: [76.17, 76.17, 76.17, 76.17, 76.17], 
+                    munhoes: [76.17, 76.17, 76.17, 76.17, 76.17],
                     moentes: [63.47, 63.47, 63.47, 63.47],
                     folgaMancal: [0.12, 0.12, 0.11, 0.12, 0.11],
                     folgaBiela: [0.08, 0.08, 0.08, 0.08],
-                    alturaPistao: [0.31, 0.31, 0.31, 0.31], 
+                    alturaPistao: [0.31, 0.31, 0.31, 0.31],
                     folgaPistao: [0.14, 0.14, 0.14, 0.14],
-                    alturaCamisa: [0.00, 0.00, 0.00, 0.00], 
-                    alturaValvula: [1.60, 1.60, 1.60, 1.60], 
-                    folgaGuia: [0.03, 0.03, 0.03, 0.03],     
-                    medidaCabecote: "STD", 
-                    folgaAxial: 0.17,
+                    alturaCamisa: [0.00, 0.00, 0.00, 0.00],
+                    alturaValvula: [1.60, 1.60, 1.60, 1.60],
+                    folgaGuia: [0.03, 0.03, 0.03, 0.03],
+                    medidaCabecote: "STD", folgaAxial: 0.17,
                     folgaBuchaComando: [0.13, 0.13, 0.13, 0.13]
                 }
             },
             'DEUTZ_6CC': {
-                brand: 'DEUTZ',
-                cylinders: 6,
-                mainBearings: 7,
+                brand: 'DEUTZ', cylinders: 6, mainBearings: 7,
                 defaults: {
                     munhoes: [69.95, 69.95, 69.95, 69.95, 69.95, 69.95, 69.95],
                     moentes: [62.95, 62.95, 62.95, 62.95, 62.95, 62.95],
@@ -114,37 +127,30 @@
                     alturaPistao: [0.65, 0.55, 0.65, 0.65, 0.56, 0.59],
                     folgaPistao: [0.15, 0.15, 0.15, 0.15, 0.15, 0.15],
                     alturaCamisa: [0.11, 0.11, 0.11, 0.11, 0.11, 0.11],
-                    alturaValvula: [1.15, 1.15, 1.15, 1.15, 1.15, 1.15], 
-                    folgaGuia: [0.03, 0.03, 0.03, 0.03, 0.03, 0.03],     
-                    medidaCabecote: "STD", 
-                    folgaAxial: 0.07,
+                    alturaValvula: [1.15, 1.15, 1.15, 1.15, 1.15, 1.15],
+                    folgaGuia: [0.03, 0.03, 0.03, 0.03, 0.03, 0.03],
+                    medidaCabecote: "STD", folgaAxial: 0.07,
                     folgaBuchaComando: [0.13, 0.13, 0.13, 0.13, 0.13, 0.13]
                 }
             }
         };
 
         const PARTS_LIST_CAT = [
-            "Camisa de Cilindro Caterpillar - Jogo", "Kits de Cilindro Caterpillar - Jogo", "Jet Oil Caterpillar - Jogo",
-            "Parafuso Jet Oil Caterpillar - Jogo", "Válvula de Admissão Caterpillar - Jogo", "Válvula de Escape Caterpillar - Jogo",
-            "Guias Caterpillar - Jogo", "Vedadores de Válvulas - Jogo", "Trava de Válvula - Jogo",
-            "Bucha Comando Caterpillar - 1 un", "Bucha de Biela Caterpillar - Jogo", "Bronzinas de Biela STD - Jogo",
-            "Bronzinas de Mancal STD - Jogo", "Bronzina Axial Jogo STD - 1 un", "Retentor Traseiro Perkins - 1 un",
-            "Retentor Dianteiro Caterpillar - 1 un", "Pista Retentor Traseiro - 1 un", "Retentor P1 Caterpillar - 1 un",
-            "Junta Trocador de Óleo - 2 un", "Junta TT Caterpillar - 1 un", "Junta DT Caterpillar - 1 un",
-            "Junta do Cabeçote Caterpillar - 1 un", "Junta LTD Caterpillar - 1 un", "Junta SM Caterpillar - 1 un",
-            "Juntas CS Caterpillar - 1 un", "Juntas AM Caterpillar - 1 un", "Junta da Frente Caterpillar - 1 un",
-            "Junta Caterpillar - 1 un", "Juntas SDS Caterpillar - 1 un", "Junta FFR Caterpillar - 1 un",
-            "Juntas BBA Caterpillar - 1 un", "Oring TT Caterpillar - 1 un", "Sedes de Válvula de Escape - Jogo",
-            "Sedes de Válvula de Admissão - Jogo", "Bomba de Óleo Caterpillar - 1 un", "Carcaça Válvula Bomba - 1 un",
-            "Filtro Lubrificante Caterpillar - 2 un", "Comando de Válvulas - 1 un", "Mangueira Radiador de Óleo - 2 un",
-            "Parafuso da Polia Caterpillar - 3 un", "Mangueira do Respiro - 1 un", "Pino de Mancal Caterpillar - 1 un",
-            "Pino Elástico Caterpillar - 1 un", "Anel Oring Caterpillar - 4 un", "Tucho de Válvulas - Jogo",
-            "Parafuso de Biela Caterpillar - Jogo", "Válvula Dosificadora - 1 un", "Kit Palhetas - 1 un",
-            "Anel Eccentrico - 1 un", "Corpo Distribuidor - 1 un", "Anel de Resalto - 1 un",
-            "Kit Reparo - 1 un", "Trava Eixo - 1 un", "Retentor Carcaça - 2 un",
-            "Kit Sapato e Rolete - 4 un", "Bico Injetor Delphi - 6 un", "Parafuso Trava Ponto - 1 un",
-            "Pino de Pressão Caterpillar - 6 un", "Prisoneiro Bomba Injetora - 3 un", "Abraçadeiras Diversas - 1 un",
-            "Óleo Motor 15W40 - 20 un", "Tinta Amarela Caterpillar - 1 un", "Thynner - 5 un"
+            "Camisa de Cilindro Caterpillar - Jogo", "Kits de Cilindro Caterpillar - Jogo", "Jet Oil Caterpillar - Jogo", "Parafuso Jet Oil Caterpillar - Jogo",
+            "Válvula de Admissão Caterpillar - Jogo", "Válvula de Escape Caterpillar - Jogo", "Guias Caterpillar - Jogo", "Vedadores de Válvulas - Jogo",
+            "Trava de Válvula - Jogo", "Bucha Comando Caterpillar - 1 un", "Bucha de Biela Caterpillar - Jogo", "Bronzinas de Biela STD - Jogo",
+            "Bronzinas de Mancal STD - Jogo", "Bronzina Axial Jogo STD - 1 un", "Retentor Traseiro Perkins - 1 un", "Retentor Dianteiro Caterpillar - 1 un",
+            "Pista Retentor Traseiro - 1 un", "Retentor P1 Caterpillar - 1 un", "Junta Trocador de Óleo - 2 un", "Junta TT Caterpillar - 1 un",
+            "Junta DT Caterpillar - 1 un", "Junta do Cabeçote Caterpillar - 1 un", "Junta LTD Caterpillar - 1 un", "Junta SM Caterpillar - 1 un",
+            "Juntas CS Caterpillar - 1 un", "Juntas AM Caterpillar - 1 un", "Junta da Frente Caterpillar - 1 un", "Junta Caterpillar - 1 un",
+            "Juntas SDS Caterpillar - 1 un", "Junta FFR Caterpillar - 1 un", "Juntas BBA Caterpillar - 1 un", "Oring TT Caterpillar - 1 un",
+            "Sedes de Válvula de Escape - Jogo", "Sedes de Válvula de Admissão - Jogo", "Bomba de Óleo Caterpillar - 1 un", "Carcaça Válvula Bomba - 1 un",
+            "Filtro Lubrificante Caterpillar - 2 un", "Comando de Válvulas - 1 un", "Mangueira Radiador de Óleo - 2 un", "Parafuso da Polia Caterpillar - 3 un",
+            "Mangueira do Respiro - 1 un", "Pino de Mancal Caterpillar - 1 un", "Pino Elástico Caterpillar - 1 un", "Anel Oring Caterpillar - 4 un",
+            "Tucho de Válvulas - Jogo", "Parafuso de Biela Caterpillar - Jogo", "Válvula Dosificadora - 1 un", "Kit Palhetas - 1 un", "Anel Eccentrico - 1 un",
+            "Corpo Distribuidor - 1 un", "Anel de Resalto - 1 un", "Kit Reparo - 1 un", "Trava Eixo - 1 un", "Retentor Carcaça - 2 un", "Kit Sapato e Rolete - 4 un",
+            "Bico Injetor Delphi - 6 un", "Parafuso Trava Ponto - 1 un", "Pino de Pressão Caterpillar - 6 un", "Prisoneiro Bomba Injetora - 3 un",
+            "Abraçadeiras Diversas - 1 un", "Óleo Motor 15W40 - 20 un", "Tinta Amarela Caterpillar - 1 un", "Thynner - 5 un"
         ];
 
         const PARTS_LIST_C44 = [
@@ -152,23 +158,19 @@
             "Válvula de Escape Caterpillar - 4 un", "Válvula de Admissão Caterpillar - 4 un", "Guias de Válvula Caterpillar - 8 un",
             "Vedadores de Válvula Caterpillar - 8 un", "Molas de Válvulas Caterpillar - 8 un", "Bronzinas de Biela STD Caterpillar - 1 un",
             "Bronzinas de Mancal STD Caterpillar - 1 un", "Bucha Engrenagem Intermediária Caterpillar - 1 un", "Arruela de Encosto STD Caterpillar - 4 un",
-            "Bucha 344 Perkins - 4 un", "Retentor 112 Perkins - 1 un", "Retentor 133 Perkins - 1 un",
-            "Junta da Tampa de Válvulas Perkins - 1 un", "Junta 188 Perkins - 2 un", "Retentor 271 Perkins - 1 un",
-            "Junta 207 Perkins - 1 un", "Junta 343 Perkins - 1 un", "Retentor 321 Perkins - 1 un",
-            "Retentor 320 Perkins - 1 un", "Retentor 330 Perkins - 1 un", "Junta 222 Perkins - 1 un",
-            "Junta do Cabeçote Caterpillar - 1 un", "Retentor 328 Perkins - 2 un", "Junta 333 Perkins - 1 un",
-            "Junta da Tampa 186 Perkins - 1 un", "Junta 342 Perkins - 1 un", "Retentor 270 Perkins - 1 un",
-            "Junta 1312 Perkins - 1 un", "Junta 148 Perkins - 1 un", "Retentor 163 Perkins - 1 un",
-            "Junta 073 Perkins - 1 un", "Anel 310 Perkins - 1 un", "Varetas de Válvulas Caterpillar - 8 un",
-            "Pista Retentor Traseiro Caterpillar - 1 un", "Válvula Termostática Caterpillar - 1 un", "Filtro Delphi - 1 un",
-            "Anel Excêntrico Caterpillar Delphi - 1 un", "Comando de Válvulas Caterpillar - 1 un", "Bomba de Água Caterpillar - 1 un",
-            "Tucho de Válvulas Caterpillar - 8 un", "Parafusos 012 Perkins - 4 un", "Bomba de Óleo Caterpillar - 1 un",
-            "Mangueira 085 Gates - 3 un", "Parafuso 313 Perkins - 38 un", "Parafuso de Bielas Caterpillar - 8 un",
-            "Inserto Adm Perkins - 4 un", "Inserto Esc Perkins - 4 un", "Pulveriza Perkins - 4 un",
-            "Carcaça da Válvula de Pressão de Óleo - 1 un", "Kit Luva e Pistão Delphi - 1 un", "Junta da Tampa Delphi - 1 un",
-            "Pistão de Acionamento Delphi - 1 un", "Solenoide Delphi - 1 un", "Jogo de Reparo Delphi - 1 un",
-            "Bico Injetor Delphi - 4 un", "Kit Bomba de Palhetas Delphi - 1 un", "Retentor Carcaça Delphi - 2 un",
-            "Tinta Amarela Caterpillar - 1 un", "Thynner - 4 un", "Óleo 15W40 - 20 un", "Retentor Traseiro Caterpillar - 1 un"
+            "Bucha 344 Perkins - 4 un", "Retentor 112 Perkins - 1 un", "Retentor 133 Perkins - 1 un", "Junta da Tampa de Válvulas Perkins - 1 un",
+            "Junta 188 Perkins - 2 un", "Retentor 271 Perkins - 1 un", "Junta 207 Perkins - 1 un", "Junta 343 Perkins - 1 un", "Retentor 321 Perkins - 1 un",
+            "Retentor 320 Perkins - 1 un", "Retentor 330 Perkins - 1 un", "Junta 222 Perkins - 1 un", "Junta do Cabeçote Caterpillar - 1 un",
+            "Retentor 328 Perkins - 2 un", "Junta 333 Perkins - 1 un", "Junta da Tampa 186 Perkins - 1 un", "Junta 342 Perkins - 1 un",
+            "Retentor 270 Perkins - 1 un", "Junta 1312 Perkins - 1 un", "Junta 148 Perkins - 1 un", "Retentor 163 Perkins - 1 un", "Junta 073 Perkins - 1 un",
+            "Anel 310 Perkins - 1 un", "Varetas de Válvulas Caterpillar - 8 un", "Pista Retentor Traseiro Caterpillar - 1 un", "Válvula Termostática Caterpillar - 1 un",
+            "Filtro Delphi - 1 un", "Anel Excêntrico Caterpillar Delphi - 1 un", "Comando de Válvulas Caterpillar - 1 un", "Bomba de Água Caterpillar - 1 un",
+            "Tucho de Válvulas Caterpillar - 8 un", "Parafusos 012 Perkins - 4 un", "Bomba de Óleo Caterpillar - 1 un", "Mangueira 085 Gates - 3 un",
+            "Parafuso 313 Perkins - 38 un", "Parafuso de Bielas Caterpillar - 8 un", "Inserto Adm Perkins - 4 un", "Inserto Esc Perkins - 4 un",
+            "Pulveriza Perkins - 4 un", "Carcaça da Válvula de Pressão de Óleo - 1 un", "Kit Luva e Pistão Delphi - 1 un", "Junta da Tampa Delphi - 1 un",
+            "Pistão de Acionamento Delphi - 1 un", "Solenoide Delphi - 1 un", "Jogo de Reparo Delphi - 1 un", "Bico Injetor Delphi - 4 un",
+            "Kit Bomba de Palhetas Delphi - 1 un", "Retentor Carcaça Delphi - 2 un", "Tinta Amarela Caterpillar - 1 un", "Thynner - 4 un",
+            "Óleo 15W40 - 20 un", "Retentor Traseiro Caterpillar - 1 un"
         ];
 
         const PARTS_LIST_DEUTZ = [
@@ -178,16 +180,16 @@
             "Calço de Pressão Deutz Weichai - 6 un", "Elemento Bomba Injetora Deutz Weichai - 6 un", "Válvula de Retenção Deutz Weichai - 6 un",
             "Kit Reparo Bomba Manual Deutz Weichai - 1 un", "Kit Reparo Bomba Injetora Deutz Weichai - 1 un", "Retentor Carcaça Deutz Weichai - 2 un",
             "Porta Válvula Bomba Deutz Weichai - 6 un", "Óleo Motor 15W40 - 20 un", "Silicone Alta Temperatura - 2 un",
-            "Tinta Azul Motor Deutz Weichai - 1 un", "Thynner - 5 un", "Jet Cooler Deutz Weichai - 6 un",
-            "Pino de Pistão Deutz Weichai - 6 un", "Trava de Pistão Deutz Weichai - 12 un", "Jogo de Anéis STD Deutz Weichai - 6 un",
-            "Válvula de Admissão Deutz Weichai - 6 un", "Válvula de Escape Deutz Weichai - 6 un", "Guias de Válvulas Admissão Deutz Weichai - 6 un",
-            "Guias de Válvula Escape Deutz Weichai - 6 un", "Selos do Cabeçote Deutz Weichai - 24 un", "Vedadores de Válvula Deutz Weichai - 12 un",
-            "Junta Cabeçote Deutz Weichai - 6 un", "Calço de Camisa Deutz Weichai - 6 un", "Jogo de Junta Inferior Deutz Weichai - 1 un",
-            "Anel de Borracha Camisa Deutz Weichai - 6 un", "Borracha de Camisa Inferior Deutz Weichai - 12 un", "Junta Coletor de Admissão Deutz Weichai - 6 un",
-            "Mangueira FL/Radiador Deutz Weichai - 1 un", "Mangueira da Flauta Deutz Weichai - 6 un", "Bucha de Biela JG Deutz Weichai - 6 un",
-            "Bucha Comando JG Deutz Weichai - 1 un", "Bronzinas de Biela STD Deutz Weichai - 1 un", "Bronzinas de Mancal STD Deutz Weichai - 1 un",
-            "Pista Retentor Dianteiro Deutz Weichai - 1 un", "Bronzina Central JG Deutz Weichai - 1 un", "Bomba de Óleo Deutz Weichai - 1 un",
-            "Camisa de Cilindro STD Deutz Weichai - 6 un", "Pistão STD Deutz Weichai - 6 un"
+            "Tinta Azul Motor Deutz Weichai - 1 un", "Thynner - 5 un", "Jet Cooler Deutz Weichai - 6 un", "Pino de Pistão Deutz Weichai - 6 un",
+            "Trava de Pistão Deutz Weichai - 12 un", "Jogo de Anéis STD Deutz Weichai - 6 un", "Válvula de Admissão Deutz Weichai - 6 un",
+            "Válvula de Escape Deutz Weichai - 6 un", "Guias de Válvulas Admissão Deutz Weichai - 6 un", "Guias de Válvula Escape Deutz Weichai - 6 un",
+            "Selos do Cabeçote Deutz Weichai - 24 un", "Vedadores de Válvula Deutz Weichai - 12 un", "Junta Cabeçote Deutz Weichai - 6 un",
+            "Calço de Camisa Deutz Weichai - 6 un", "Jogo de Junta Inferior Deutz Weichai - 1 un", "Anel de Borracha Camisa Deutz Weichai - 6 un",
+            "Borracha de Camisa Inferior Deutz Weichai - 12 un", "Junta Coletor de Admissão Deutz Weichai - 6 un", "Mangueira FL/Radiador Deutz Weichai - 1 un",
+            "Mangueira da Flauta Deutz Weichai - 6 un", "Bucha de Biela JG Deutz Weichai - 6 un", "Bucha Comando JG Deutz Weichai - 1 un",
+            "Bronzinas de Biela STD Deutz Weichai - 1 un", "Bronzinas de Mancal STD Deutz Weichai - 1 un", "Pista Retentor Dianteiro Deutz Weichai - 1 un",
+            "Bronzina Central JG Deutz Weichai - 1 un", "Bomba de Óleo Deutz Weichai - 1 un", "Camisa de Cilindro STD Deutz Weichai - 6 un",
+            "Pistão STD Deutz Weichai - 6 un"
         ];
 
         const BASE_DYNO = {
@@ -197,7 +199,6 @@
         const getTodayDate = () => new Date().toISOString().split('T')[0];
         const formatDate = (date) => date ? date.split('-').reverse().join('/') : '';
 
-        // Componente Principal
         function App() {
             const [data, setData] = useState({
                 os: '14937', engineModel: 'CAT 3056', engineSerial: 'GSN01018', branchId: 'riogrande',
@@ -206,6 +207,12 @@
                 dyno: JSON.parse(JSON.stringify(BASE_DYNO))
             });
             const [images, setImages] = useState({});
+            const [validationHash, setValidationHash] = useState('');
+
+            useEffect(() => {
+                // Gerar hash aleatório para "autenticação"
+                setValidationHash(Math.random().toString(36).substring(2, 15).toUpperCase() + Math.random().toString(36).substring(2, 6).toUpperCase());
+            }, [data.os]);
 
             const currentProfile = METROLOGY_PROFILES[data.metrologyModel];
             const currentBrand = BRANDS[currentProfile.brand];
@@ -237,6 +244,7 @@
                 Object.keys(defaults).forEach(k => {
                    if(Array.isArray(defaults[k])) newMet[k] = defaults[k].map(vary);
                    else if(typeof defaults[k] === 'number') newMet[k] = vary(defaults[k]);
+                   else if(typeof defaults[k] === 'string') newMet[k] = data.metrology[k];
                 });
                 setData(prev => ({...prev, metrology: newMet}));
             };
@@ -254,7 +262,6 @@
                }}));
             };
 
-            // Gráfico SVG Gerador
             const generateTimeChart = (type) => {
                 let points = [];
                 const steps = 80, width = 600, height = 100;
@@ -287,8 +294,11 @@
             );
 
             const Footer = ({page}) => (
-                <div className="absolute bottom-4 right-8 w-full px-16 flex justify-between items-center text-[9px] text-gray-300">
-                    <span>RETIBLOCOS - LAUDO TÉCNICO DIGITAL</span>
+                <div className="absolute bottom-4 right-8 w-full px-16 flex justify-between items-end text-[9px] text-gray-300">
+                    <div className="text-left">
+                        <div>RETIBLOCOS - LAUDO TÉCNICO DIGITAL</div>
+                        <div className="font-mono text-[8px] mt-1">AUTH HASH: {validationHash}</div>
+                    </div>
                     <span>PÁGINA {page}</span>
                 </div>
             );
@@ -308,14 +318,8 @@
                             </div>
 
                             <div className="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label className="text-xs font-bold text-gray-500">DATA LAUDO</label>
-                                    <input type="date" className="w-full p-1 border rounded text-xs" value={data.reportDate} onChange={e => setData({...data, reportDate: e.target.value})}/>
-                                </div>
-                                <div>
-                                    <label className="text-xs font-bold text-gray-500">DATA MEDIÇÃO</label>
-                                    <input type="date" className="w-full p-1 border rounded text-xs" value={data.metrologyDate} onChange={e => setData({...data, metrologyDate: e.target.value})}/>
-                                </div>
+                                <div><label className="text-xs font-bold text-gray-500">DATA LAUDO</label><input type="date" className="w-full p-1 border rounded text-xs" value={data.reportDate} onChange={e => setData({...data, reportDate: e.target.value})}/></div>
+                                <div><label className="text-xs font-bold text-gray-500">DATA MEDIÇÃO</label><input type="date" className="w-full p-1 border rounded text-xs" value={data.metrologyDate} onChange={e => setData({...data, metrologyDate: e.target.value})}/></div>
                             </div>
 
                             <div>
@@ -337,7 +341,22 @@
                                     <button onClick={() => handleModelChange('C4.4')} className={`flex-1 text-[10px] p-1 rounded border ${data.metrologyModel==='C4.4'?'bg-yellow-500 text-white':'bg-white'}`}>CAT C4.4</button>
                                     <button onClick={() => handleModelChange('DEUTZ_6CC')} className={`flex-1 text-[10px] p-1 rounded border ${data.metrologyModel==='DEUTZ_6CC'?'bg-blue-600 text-white':'bg-white'}`}>DEUTZ</button>
                                 </div>
+                                <div className="mb-2">
+                                   <label className="text-[10px] uppercase text-gray-500">Medida Cabeçote</label>
+                                   <input type="text" value={data.metrology.medidaCabecote} onChange={(e) => setData({...data, metrology: {...data.metrology, medidaCabecote: e.target.value}})} className="w-full text-xs border rounded p-1" placeholder="Ex: STD, 0,50mm..." />
+                                </div>
                                 <button onClick={randomizeMetrology} className="w-full py-1 bg-white border border-blue-300 text-blue-700 text-xs rounded hover:bg-blue-100">Randomizar Medidas</button>
+                            </div>
+
+                            <div className="bg-gray-50 p-3 rounded border border-gray-200">
+                                <label className="text-xs font-bold text-gray-700 block mb-2">DINAMÔMETRO</label>
+                                <div className="grid grid-cols-2 gap-1 mb-2">
+                                    <input type="number" className="w-full text-[10px] border rounded p-1" placeholder="HP" value={data.dyno.potencia} onChange={e=>setData({...data, dyno: {...data.dyno, potencia: parseFloat(e.target.value)}})}/>
+                                    <input type="number" className="w-full text-[10px] border rounded p-1" placeholder="Torque" value={data.dyno.torque} onChange={e=>setData({...data, dyno: {...data.dyno, torque: parseFloat(e.target.value)}})}/>
+                                    <input type="number" className="w-full text-[10px] border rounded p-1" placeholder="Óleo Lenta" step="0.1" value={data.dyno.pressaoOleoLenta} onChange={e=>setData({...data, dyno: {...data.dyno, pressaoOleoLenta: parseFloat(e.target.value)}})}/>
+                                    <input type="number" className="w-full text-[10px] border rounded p-1" placeholder="Óleo Carga" step="0.1" value={data.dyno.pressaoOleoCarga} onChange={e=>setData({...data, dyno: {...data.dyno, pressaoOleoCarga: parseFloat(e.target.value)}})}/>
+                                </div>
+                                <button onClick={randomizeDyno} className="w-full py-1 bg-white border border-gray-300 text-gray-700 text-xs rounded hover:bg-gray-100">Randomizar Teste</button>
                             </div>
                             
                             <div className="grid grid-cols-2 gap-2">
@@ -348,8 +367,9 @@
                                 ))}
                             </div>
 
-                            <button onClick={() => window.print()} className="w-full py-3 bg-slate-800 text-white font-bold rounded shadow hover:bg-black mt-4">
-                                🖨️ SALVAR PDF
+                            <button onClick={() => window.print()} className="w-full py-3 bg-slate-800 text-white font-bold rounded shadow hover:bg-black mt-4 flex items-center justify-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+                                SALVAR PDF
                             </button>
                         </div>
                     </div>
@@ -406,18 +426,18 @@
                                 <h2 className="text-lg font-bold text-slate-900 mb-6 uppercase tracking-wide border-b pb-2">Sumário Executivo</h2>
                                 <div className="space-y-4">
                                     {[
-                                        {t:"1. RECEBIMENTO", d:"Registro fotográfico e conferência inicial."},
-                                        {t:"2. DESMONTAGEM", d:"Abertura completa e inspeção visual de falhas."},
-                                        {t:"3. LIMPEZA & ANÁLISE", d:"Lavagem química e metrologia de componentes."},
-                                        {t:"4. CONTROLE DIMENSIONAL", d:"Medição de folgas com instrumentos calibrados."},
-                                        {t:"5. TESTE DE PERFORMANCE", d:"Teste de carga em dinamômetro (curvas de torque/potência)."},
-                                        {t:"6. ENTREGA", d:`Pintura padrão ${currentBrand.paint} e embalagem.`}
+                                        {t:"1. RECEBIMENTO", d:BOILERPLATE.recebimento},
+                                        {t:"2. DESMONTAGEM", d:BOILERPLATE.desmontagem},
+                                        {t:"3. LIMPEZA & ANÁLISE", d:BOILERPLATE.limpeza},
+                                        {t:"4. CONTROLE DIMENSIONAL", d:BOILERPLATE.metrologia},
+                                        {t:"5. TESTE DE PERFORMANCE", d:"O motor foi submetido a testes de carga em dinamômetro com monitoramento rigoroso de curvas de torque e potência."},
+                                        {t:"6. ENTREGA", d:BOILERPLATE.finalizacao}
                                     ].map((i,x) => (
                                         <div key={x} className="flex group">
                                             <div className={`w-12 text-2xl font-black ${currentBrand.name==='CAT'?'text-yellow-500':'text-blue-600'} opacity-50`}>0{x+1}</div>
                                             <div className="pb-3 border-b border-gray-100 w-full">
                                                 <h3 className="font-bold text-slate-900 text-sm">{i.t.split('. ')[1]}</h3>
-                                                <p className="text-slate-500 text-xs">{i.d}</p>
+                                                <p className="technical-text">{i.d}</p>
                                             </div>
                                         </div>
                                     ))}
@@ -430,8 +450,8 @@
                         <div className="a4-page p-12 relative">
                             <Header/>
                             <div className="mb-8">
-                                <h2 className={`text-lg font-bold text-slate-800 border-l-4 ${currentBrand.name==='CAT'?'border-yellow-500':'border-blue-600'} pl-3 mb-2`}>1. RECEBIMENTO</h2>
-                                <p className="text-xs text-slate-500 mb-4 text-justify">O equipamento foi recebido e inspecionado. Registros visuais do estado inicial.</p>
+                                <h2 className={`text-lg font-bold text-slate-800 border-l-4 ${currentBrand.name==='CAT'?'border-yellow-500':'border-blue-600'} pl-3 mb-2`}>1. RECEBIMENTO E AVALIAÇÃO</h2>
+                                <p className="technical-text mb-4">{BOILERPLATE.recebimento}</p>
                                 <div className="grid grid-cols-2 gap-4 h-64">
                                     {['recebimento','bloco'].map(k => (
                                         <div key={k} className="border bg-gray-50 flex items-center justify-center overflow-hidden relative">
@@ -441,8 +461,8 @@
                                 </div>
                             </div>
                             <div className="mt-8">
-                                <h2 className={`text-lg font-bold text-slate-800 border-l-4 ${currentBrand.name==='CAT'?'border-yellow-500':'border-blue-600'} pl-3 mb-2`}>2. DESMONTAGEM</h2>
-                                <p className="text-xs text-slate-500 mb-4 text-justify">Desmontagem controlada e segregação de componentes para análise.</p>
+                                <h2 className={`text-lg font-bold text-slate-800 border-l-4 ${currentBrand.name==='CAT'?'border-yellow-500':'border-blue-600'} pl-3 mb-2`}>2. DESMONTAGEM TÉCNICA</h2>
+                                <p className="technical-text mb-4">{BOILERPLATE.desmontagem}</p>
                                 <div className="grid grid-cols-2 gap-4 h-64">
                                     {['desmontagem','virabrequim'].map(k => (
                                         <div key={k} className="border bg-gray-50 flex items-center justify-center overflow-hidden relative">
@@ -501,11 +521,11 @@
                                     <div className="flex justify-between"><span>COOLANT TEMP....:</span> <span>{data.dyno.tempAgua} °C</span></div>
                                 </div>
                                 <div className="flex flex-col gap-4 mt-4 flex-1">
-                                    <div className="border border-gray-400 p-2 bg-white h-32 relative">
+                                    <div className="border-t border-gray-400 p-2 bg-white h-32 relative">
                                         <div className="text-[10px] font-bold border-b mb-1">IDLE STABILITY</div>
                                         <svg className="w-full h-full" viewBox="0 0 600 100" preserveAspectRatio="none"><path d={`M0,100 ${generateTimeChart('idle')}`} fill="none" stroke="black" strokeWidth="1"/></svg>
                                     </div>
-                                    <div className="border border-gray-400 p-2 bg-white h-32 relative">
+                                    <div className="border-t border-gray-400 p-2 bg-white h-32 relative">
                                         <div className="text-[10px] font-bold border-b mb-1">LOAD TEST @ 1800</div>
                                         <svg className="w-full h-full" viewBox="0 0 600 100" preserveAspectRatio="none"><path d={`M0,100 ${generateTimeChart('load')}`} fill="none" stroke="black" strokeWidth="1"/></svg>
                                     </div>
@@ -525,7 +545,7 @@
                                 </ul>
                                 <h2 className="text-lg font-bold text-slate-800 mb-2 mt-8 border-b pb-1">ACABAMENTO</h2>
                                 <div className="flex gap-4 h-32">
-                                    <p className="w-2/3 text-xs text-justify">Motor limpo, pintado com padrão <strong>{currentBrand.paint}</strong> e paletizado para transporte.</p>
+                                    <p className="w-2/3 technical-text">{BOILERPLATE.finalizacao}</p>
                                     <div className="w-1/3 border bg-gray-50 flex items-center justify-center overflow-hidden">{images.pintura?<img src={images.pintura} className="w-full h-full object-cover"/>:<span className="text-[10px] text-gray-400">PINTURA</span>}</div>
                                 </div>
                             </div>
