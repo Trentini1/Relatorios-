@@ -1,0 +1,1018 @@
+import React, { useState, useEffect } from 'react';
+import { Printer, Camera, Settings, RefreshCw, AlertTriangle, FileText, Calendar, Activity, Database, Wrench, Save } from 'lucide-react';
+
+// Dados estáticos das filiais SAAM
+const SAAM_BRANCHES = [
+  { id: 'riogrande', city: 'RIO GRANDE - RS', cnpj: '05.436.047/0008-92', address: 'AVENIDA ALMIRANTE MAXIMIANO FONSECA, 3965' },
+  { id: 'santos', city: 'SANTOS - SP', cnpj: '05.436.047/0001-16', address: 'RUA DO COMÉRCIO, 54 - CENTRO' },
+  { id: 'salvador', city: 'SALVADOR - BA', cnpj: '05.436.047/0005-40', address: 'AVENIDA DA FRANÇA, 393' },
+  { id: 'rio', city: 'RIO DE JANEIRO - RJ', cnpj: '05.436.047/0002-05', address: 'RUA DA QUITANDA, 86' },
+  { id: 'barcarena', city: 'BARCARENA - PA', cnpj: '05.436.047/0017-83', address: 'AV CONEGO JERONIMO PIMENTEL SN, QD 234 - VILA DOS CABANOS' },
+  { id: 'vitoria', city: 'VITORIA - ES', cnpj: '05.436.047/0006-20', address: 'AV JERONIMO MONTEIRO, 1000 - CENTRO' },
+  { id: 'recife', city: 'RECIFE - PE', cnpj: '05.436.047/0009-73', address: 'RUA PADRE CARAPUCEIRO, 968 - BOA VIAGEM' },
+  { id: 'itajai', city: 'ITAJAI - SC', cnpj: '05.436.047/0011-98', address: 'RUA MANOEL VIEIRA GARÇÃO, 10, SALA 401 - CENTRO' },
+];
+
+// Marcas Suportadas
+const BRANDS = {
+  CAT: {
+    name: 'CAT',
+    color: 'yellow', 
+    hex: '#eab308',
+    secondary: 'black',
+    logoText: 'CAT',
+    paint: 'CAT Yellow'
+  },
+  DEUTZ: {
+    name: 'DEUTZ',
+    color: 'blue',
+    hex: '#2563eb',
+    secondary: 'red', 
+    logoText: 'WEICHAI DEUTZ',
+    paint: 'Azul Motor Deutz'
+  }
+};
+
+// Perfis de Metrologia
+const METROLOGY_PROFILES = {
+  '3056': {
+    brand: 'CAT',
+    cylinders: 6,
+    mainBearings: 7,
+    defaults: {
+      munhoes: [76.14, 76.17, 76.17, 76.17, 76.17, 76.17, 76.17],
+      moentes: [63.45, 63.45, 63.45, 63.45, 63.45, 63.45],
+      folgaMancal: [0.10, 0.11, 0.11, 0.11, 0.11, 0.10, 0.10],
+      folgaBiela: [0.07, 0.08, 0.07, 0.07, 0.08, 0.07],
+      alturaPistao: [0.51, 0.57, 0.59, 0.56, 0.50, 0.55],
+      folgaPistao: [0.12, 0.11, 0.12, 0.12, 0.12, 0.12],
+      alturaCamisa: [0.05, 0.04, 0.05, 0.05, 0.04, 0.05],
+      alturaValvula: [1.50, 1.50, 1.50, 1.50, 1.50, 1.50], 
+      folgaGuia: [0.03, 0.03, 0.03, 0.03, 0.03, 0.03],     
+      medidaCabecote: "STD", 
+      folgaAxial: 0.21,
+      folgaBuchaComando: [0.13, 0.13, 0.13, 0.13, 0.13, 0.13]
+    }
+  },
+  'C4.4': {
+    brand: 'CAT',
+    cylinders: 4,
+    mainBearings: 5,
+    defaults: {
+      munhoes: [76.17, 76.17, 76.17, 76.17, 76.17], 
+      moentes: [63.47, 63.47, 63.47, 63.47],
+      folgaMancal: [0.12, 0.12, 0.11, 0.12, 0.11],
+      folgaBiela: [0.08, 0.08, 0.08, 0.08],
+      alturaPistao: [0.31, 0.31, 0.31, 0.31], 
+      folgaPistao: [0.14, 0.14, 0.14, 0.14],
+      alturaCamisa: [0.00, 0.00, 0.00, 0.00], 
+      alturaValvula: [1.60, 1.60, 1.60, 1.60], 
+      folgaGuia: [0.03, 0.03, 0.03, 0.03],     
+      medidaCabecote: "STD", 
+      folgaAxial: 0.17,
+      folgaBuchaComando: [0.13, 0.13, 0.13, 0.13]
+    }
+  },
+  'DEUTZ_6CC': {
+    brand: 'DEUTZ',
+    cylinders: 6,
+    mainBearings: 7,
+    defaults: {
+      munhoes: [69.95, 69.95, 69.95, 69.95, 69.95, 69.95, 69.95],
+      moentes: [62.95, 62.95, 62.95, 62.95, 62.95, 62.95],
+      folgaMancal: [0.10, 0.09, 0.09, 0.10, 0.14, 0.12, 0.10],
+      folgaBiela: [0.07, 0.07, 0.08, 0.08, 0.06, 0.07],
+      alturaPistao: [0.65, 0.55, 0.65, 0.65, 0.56, 0.59],
+      folgaPistao: [0.15, 0.15, 0.15, 0.15, 0.15, 0.15],
+      alturaCamisa: [0.11, 0.11, 0.11, 0.11, 0.11, 0.11],
+      alturaValvula: [1.15, 1.15, 1.15, 1.15, 1.15, 1.15], 
+      folgaGuia: [0.03, 0.03, 0.03, 0.03, 0.03, 0.03],     
+      medidaCabecote: "STD", 
+      folgaAxial: 0.07,
+      folgaBuchaComando: [0.13, 0.13, 0.13, 0.13, 0.13, 0.13]
+    }
+  }
+};
+
+// LISTAS DE PEÇAS
+const PARTS_LIST_CAT = [
+  "1. Camisa de Cilindro Caterpillar - Jogo", "2. Kits de Cilindro Caterpillar - Jogo", "3. Jet Oil Caterpillar - Jogo",
+  "4. Parafuso Jet Oil Caterpillar - Jogo", "5. Válvula de Admissão Caterpillar - Jogo", "6. Válvula de Escape Caterpillar - Jogo",
+  "7. Guias Caterpillar - Jogo", "8. Vedadores de Válvulas - Jogo", "9. Trava de Válvula - Jogo",
+  "10. Bucha Comando Caterpillar - 1 un", "11. Bucha de Biela Caterpillar - Jogo", "12. Bronzinas de Biela STD - Jogo",
+  "13. Bronzinas de Mancal STD - Jogo", "14. Bronzina Axial Jogo STD - 1 un", "15. Retentor Traseiro Perkins - 1 un",
+  "16. Retentor Dianteiro Caterpillar - 1 un", "17. Pista Retentor Traseiro - 1 un", "18. Retentor P1 Caterpillar - 1 un",
+  "19. Junta Trocador de Óleo - 2 un", "20. Junta TT Caterpillar - 1 un", "21. Junta DT Caterpillar - 1 un",
+  "22. Junta do Cabeçote Caterpillar - 1 un", "23. Junta LTD Caterpillar - 1 un", "24. Junta SM Caterpillar - 1 un",
+  "25. Juntas CS Caterpillar - 1 un", "26. Juntas AM Caterpillar - 1 un", "27. Junta da Frente Caterpillar - 1 un",
+  "28. Junta Caterpillar - 1 un", "29. Juntas SDS Caterpillar - 1 un", "30. Junta FFR Caterpillar - 1 un",
+  "31. Juntas BBA Caterpillar - 1 un", "32. Oring TT Caterpillar - 1 un", "33. Sedes de Válvula de Escape - Jogo",
+  "34. Sedes de Válvula de Admissão - Jogo", "35. Bomba de Óleo Caterpillar - 1 un", "36. Carcaça Válvula Bomba - 1 un",
+  "37. Filtro Lubrificante Caterpillar - 2 un", "38. Comando de Válvulas - 1 un", "39. Mangueira Radiador de Óleo - 2 un",
+  "40. Parafuso da Polia Caterpillar - 3 un", "41. Mangueira do Respiro - 1 un", "42. Pino de Mancal Caterpillar - 1 un",
+  "43. Pino Elástico Caterpillar - 1 un", "44. Anel Oring Caterpillar - 4 un", "45. Tucho de Válvulas - Jogo",
+  "46. Parafuso de Biela Caterpillar - Jogo", "47. Válvula Dosificadora - 1 un", "48. Kit Palhetas - 1 un",
+  "49. Anel Eccentrico - 1 un", "50. Corpo Distribuidor - 1 un", "51. Anel de Resalto - 1 un",
+  "52. Kit Reparo - 1 un", "53. Trava Eixo - 1 un", "54. Retentor Carcaça - 2 un",
+  "55. Kit Sapato e Rolete - 4 un", "56. Bico Injetor Delphi - 6 un", "57. Parafuso Trava Ponto - 1 un",
+  "58. Pino de Pressão Caterpillar - 6 un", "59. Prisoneiro Bomba Injetora - 3 un", "60. Abraçadeiras Diversas - 1 un",
+  "61. Óleo Motor 15W40 - 20 un", "62. Tinta Amarela Caterpillar - 1 un", "63. Thynner - 5 un"
+];
+
+// LISTA ESPECÍFICA C4.4 (ATUALIZADA COM ORÇAMENTO 15592)
+const PARTS_LIST_C44 = [
+  "1. Camisa de Cilindro Caterpillar - 4 un",
+  "2. Pistão - Pino-Trava Caterpillar - 4 un",
+  "3. Jogo de Anéis Pistão Caterpillar - 4 un",
+  "4. Válvula de Escape Caterpillar - 4 un",
+  "5. Válvula de Admissão Caterpillar - 4 un",
+  "6. Guias de Válvula Caterpillar - 8 un",
+  "7. Vedadores de Válvula Caterpillar - 8 un",
+  "8. Molas de Válvulas Caterpillar - 8 un",
+  "9. Bronzinas de Biela STD Caterpillar - 1 un",
+  "10. Bronzinas de Mancal STD Caterpillar - 1 un",
+  "11. Bucha Engrenagem Intermediária Caterpillar - 1 un",
+  "12. Arruela de Encosto STD Caterpillar - 4 un",
+  "13. Bucha 344 Perkins - 4 un",
+  "14. Retentor 112 Perkins - 1 un",
+  "15. Retentor 133 Perkins - 1 un",
+  "16. Junta da Tampa de Válvulas Perkins - 1 un",
+  "17. Junta 188 Perkins - 2 un",
+  "18. Retentor 271 Perkins - 1 un",
+  "19. Junta 207 Perkins - 1 un",
+  "20. Junta 343 Perkins - 1 un",
+  "21. Retentor 321 Perkins - 1 un",
+  "22. Retentor 320 Perkins - 1 un",
+  "23. Retentor 330 Perkins - 1 un",
+  "24. Junta 222 Perkins - 1 un",
+  "25. Junta do Cabeçote Caterpillar - 1 un",
+  "26. Retentor 328 Perkins - 2 un",
+  "27. Junta 333 Perkins - 1 un",
+  "28. Junta da Tampa 186 Perkins - 1 un",
+  "29. Junta 342 Perkins - 1 un",
+  "30. Retentor 270 Perkins - 1 un",
+  "31. Junta 1312 Perkins - 1 un",
+  "32. Junta 148 Perkins - 1 un",
+  "33. Retentor 163 Perkins - 1 un",
+  "34. Junta 073 Perkins - 1 un",
+  "35. Anel 310 Perkins - 1 un",
+  "36. Varetas de Válvulas Caterpillar - 8 un",
+  "37. Pista Retentor Traseiro Caterpillar - 1 un",
+  "38. Válvula Termostática Caterpillar - 1 un",
+  "39. Filtro Delphi - 1 un",
+  "40. Anel Excêntrico Caterpillar Delphi - 1 un",
+  "41. Comando de Válvulas Caterpillar - 1 un",
+  "42. Bomba de Água Caterpillar - 1 un",
+  "43. Tucho de Válvulas Caterpillar - 8 un",
+  "44. Parafusos 012 Perkins - 4 un",
+  "45. Bomba de Óleo Caterpillar - 1 un",
+  "46. Mangueira 085 Gates - 3 un",
+  "47. Parafuso 313 Perkins - 38 un",
+  "48. Parafuso de Bielas Caterpillar - 8 un",
+  "49. Inserto Adm Perkins - 4 un",
+  "50. Inserto Esc Perkins - 4 un",
+  "51. Pulveriza Perkins - 4 un",
+  "52. Carcaça da Válvula de Pressão de Óleo - 1 un",
+  "53. Kit Luva e Pistão Delphi - 1 un",
+  "54. Junta da Tampa Delphi - 1 un",
+  "55. Pistão de Acionamento Delphi - 1 un",
+  "56. Solenoide Delphi - 1 un",
+  "57. Jogo de Reparo Delphi - 1 un",
+  "58. Bico Injetor Delphi - 4 un",
+  "59. Kit Bomba de Palhetas Delphi - 1 un",
+  "60. Retentor Carcaça Delphi - 2 un",
+  "61. Tinta Amarela Caterpillar - 1 un",
+  "62. Thynner - 4 un",
+  "63. Óleo 15W40 - 20 un",
+  "64. Retentor Traseiro Caterpillar - 1 un"
+];
+
+const PARTS_LIST_DEUTZ = [
+  "1. Bomba de Água Deutz Weichai - 1 un", "2. Válvula Termostática Deutz Weichai - 1 un", "3. Filtro de Óleo Deutz Weichai - 1 un",
+  "4. Filtro Diesel Deutz Weichai - 2 un", "5. Tucho de Válvula Deutz Weichai - 12 un", "6. Vareta de Válvula Deutz Weichai - 12 un",
+  "7. Retentor Dianteiro Deutz Weichai - 1 un", "8. Retentor Traseiro Deutz Weichai (Adapt) - 1 un", "9. Bicos Injetores Deutz Weichai - 6 un",
+  "10. Calço de Pressão Deutz Weichai - 6 un", "11. Elemento Bomba Injetora Deutz Weichai - 6 un", "12. Válvula de Retenção Deutz Weichai - 6 un",
+  "13. Kit Reparo Bomba Manual Deutz Weichai - 1 un", "14. Kit Reparo Bomba Injetora Deutz Weichai - 1 un", "15. Retentor Carcaça Deutz Weichai - 2 un",
+  "16. Porta Válvula Bomba Deutz Weichai - 6 un", "17. Óleo Motor 15W40 - 20 un", "18. Silicone Alta Temperatura - 2 un",
+  "19. Tinta Azul Motor Deutz Weichai - 1 un", "20. Thynner - 5 un", "21. Jet Cooler Deutz Weichai - 6 un",
+  "22. Pino de Pistão Deutz Weichai - 6 un", "23. Trava de Pistão Deutz Weichai - 12 un", "24. Jogo de Anéis STD Deutz Weichai - 6 un",
+  "25. Válvula de Admissão Deutz Weichai - 6 un", "26. Válvula de Escape Deutz Weichai - 6 un", "27. Guias de Válvulas Admissão Deutz Weichai - 6 un",
+  "28. Guias de Válvula Escape Deutz Weichai - 6 un", "29. Selos do Cabeçote Deutz Weichai - 24 un", "30. Vedadores de Válvula Deutz Weichai - 12 un",
+  "31. Junta Cabeçote Deutz Weichai - 6 un", "32. Calço de Camisa Deutz Weichai - 6 un", "33. Jogo de Junta Inferior Deutz Weichai - 1 un",
+  "34. Anel de Borracha Camisa Deutz Weichai - 6 un", "35. Borracha de Camisa Inferior Deutz Weichai - 12 un", "36. Junta Coletor de Admissão Deutz Weichai - 6 un",
+  "37. Mangueira FL/Radiador Deutz Weichai - 1 un", "38. Mangueira da Flauta Deutz Weichai - 6 un", "39. Bucha de Biela JG Deutz Weichai - 6 un",
+  "40. Bucha Comando JG Deutz Weichai - 1 un", "41. Bronzinas de Biela STD Deutz Weichai - 1 un", "42. Bronzinas de Mancal STD Deutz Weichai - 1 un",
+  "43. Pista Retentor Dianteiro Deutz Weichai - 1 un", "44. Bronzina Central JG Deutz Weichai - 1 un", "45. Bomba de Óleo Deutz Weichai - 1 un",
+  "46. Camisa de Cilindro STD Deutz Weichai - 6 un", "47. Pistão STD Deutz Weichai - 6 un"
+];
+
+// Valores base do PDF para o Dinamômetro
+const BASE_DYNO = {
+  rpmLenta: 850,
+  rpmCarga: 1800,
+  potencia: 134.0, 
+  torque: 350.0,   
+  pressaoOleoLenta: 1.5, 
+  pressaoOleoCarga: 3.5, 
+  pressaoTurbo: 140, 
+  tempAgua: 88      
+};
+
+// Helpers
+const getTodayDate = () => {
+  const today = new Date();
+  return today.toISOString().split('T')[0];
+};
+
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  const [year, month, day] = dateString.split('-');
+  return `${day}/${month}/${year}`;
+};
+
+export default function App() {
+  const [data, setData] = useState({
+    os: '14937',
+    engineModel: 'CAT 3056',
+    engineSerial: 'GSN01018',
+    branchId: 'riogrande',
+    reportDate: getTodayDate(),
+    metrologyDate: getTodayDate(),
+    observations: '',
+    metrologyModel: '3056', 
+    metrology: JSON.parse(JSON.stringify(METROLOGY_PROFILES['3056'].defaults)),
+    dyno: JSON.parse(JSON.stringify(BASE_DYNO))
+  });
+
+  const [images, setImages] = useState({
+    capa: null,
+    recebimento: null,
+    desmontagem: null,
+    bloco: null,
+    virabrequim: null,
+    montagem: null,
+    pintura: null
+  });
+
+  const currentProfile = METROLOGY_PROFILES[data.metrologyModel];
+  const currentBrand = BRANDS[currentProfile.brand];
+  
+  // Lógica atualizada para selecionar a lista correta
+  const currentPartsList = currentBrand.name === 'DEUTZ' 
+    ? PARTS_LIST_DEUTZ 
+    : (data.metrologyModel === 'C4.4' ? PARTS_LIST_C44 : PARTS_LIST_CAT);
+
+  // ATUALIZADOR DE TÍTULO DO DOCUMENTO
+  useEffect(() => {
+    const brandName = currentBrand.name === 'CAT' ? 'CAT' : 'DEUTZ';
+    const modelName = data.metrologyModel.replace('_', ' ');
+    document.title = `Laudo_${brandName}_${modelName}_OS${data.os}_SERIE${data.engineSerial}`;
+  }, [data.os, data.engineSerial, data.metrologyModel, currentBrand]);
+
+  const handleModelChange = (newModel) => {
+    const newProfile = METROLOGY_PROFILES[newModel];
+    setData(prev => ({
+      ...prev,
+      metrologyModel: newModel,
+      engineModel: newModel === 'C4.4' ? 'CAT C4.4' : newModel === '3056' ? 'CAT 3056' : 'DEUTZ WP6', 
+      metrology: JSON.parse(JSON.stringify(newProfile.defaults))
+    }));
+  };
+
+  const randomizeMetrology = () => {
+    const defaults = METROLOGY_PROFILES[data.metrologyModel].defaults;
+    
+    const vary = (val) => {
+      const variation = (Math.random() - 0.5) * 0.04; 
+      return parseFloat((val + variation).toFixed(2));
+    };
+
+    const newMetrology = {
+      munhoes: defaults.munhoes.map(vary),
+      moentes: defaults.moentes.map(vary),
+      folgaMancal: defaults.folgaMancal.map(vary),
+      folgaBiela: defaults.folgaBiela.map(vary),
+      alturaPistao: defaults.alturaPistao.map(vary),
+      folgaPistao: defaults.folgaPistao.map(vary),
+      alturaCamisa: defaults.alturaCamisa.map(vary),
+      alturaValvula: defaults.alturaValvula.map(vary),
+      folgaGuia: defaults.folgaGuia.map(vary),
+      medidaCabecote: data.metrology.medidaCabecote,
+      folgaAxial: vary(defaults.folgaAxial),
+      folgaBuchaComando: defaults.folgaBuchaComando.map(vary)
+    };
+    setData({ ...data, metrology: newMetrology });
+  };
+
+  const randomizeDyno = () => {
+    const vary = (val, range) => {
+      const variation = (Math.random() - 0.5) * range;
+      return Math.round((val + variation) * 10) / 10;
+    };
+    const safeOilLenta = Math.max(1.25, vary(BASE_DYNO.pressaoOleoLenta, 0.3));
+    const safeOilCarga = Math.max(3.0, vary(BASE_DYNO.pressaoOleoCarga, 0.5)); 
+
+    const newDyno = {
+      rpmLenta: Math.round(vary(BASE_DYNO.rpmLenta, 20)),
+      rpmCarga: Math.round(vary(BASE_DYNO.rpmCarga, 30)),
+      potencia: vary(BASE_DYNO.potencia, 5),
+      torque: vary(BASE_DYNO.torque, 10),
+      pressaoOleoLenta: safeOilLenta,
+      pressaoOleoCarga: safeOilCarga,
+      pressaoTurbo: Math.round(vary(BASE_DYNO.pressaoTurbo, 10)),
+      tempAgua: Math.round(vary(BASE_DYNO.tempAgua, 3))
+    };
+    setData({ ...data, dyno: newDyno });
+  };
+
+  const handleImageUpload = (section, e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setImages({ ...images, [section]: url });
+    }
+  };
+
+  const handlePrint = () => {
+    // SIMPLIFICADO: Apenas chama a impressão
+    // O título do documento (document.title) já define o nome sugerido do arquivo
+    window.print();
+  };
+
+  const currentBranch = SAAM_BRANCHES.find(b => b.id === data.branchId);
+
+  // Gerador de Gráficos por Tempo (Time-based)
+  const generateTimeChart = (type) => {
+    let points = [];
+    const steps = 80;
+    const width = 600;
+    const height = 100;
+    
+    if (type === 'idle') {
+        const target = data.dyno.rpmLenta;
+        const noise = 15; 
+        for(let i=0; i<=steps; i++) {
+            const x = (i / steps) * width; 
+            const randomFluctuation = (Math.sin(i * 0.5) * noise) + (Math.random() * 5);
+            const val = target + randomFluctuation;
+            const y = height - ((val / 1200) * height); 
+            points.push(`${x},${y}`);
+        }
+    } else if (type === 'load') {
+        const target = 1800; 
+        const start = 800;
+        for(let i=0; i<=steps; i++) {
+            const x = (i / steps) * width;
+            let val = 0;
+            if (i < steps * 0.2) {
+                const progress = i / (steps * 0.2);
+                val = start + ((target - start) * progress);
+            } else {
+                val = target + (Math.random() * 2 - 1);
+            }
+            const y = height - ((val / 2500) * height);
+            points.push(`${x},${y}`);
+        }
+    }
+    return points.join(' ');
+  };
+
+  return (
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-100 font-sans text-slate-800">
+      
+      {/* --- SIDEBAR --- */}
+      <div className="w-full md:w-1/3 lg:w-1/4 bg-white p-6 shadow-xl z-10 print:hidden overflow-y-auto h-screen sticky top-0 border-r border-gray-300">
+        <h1 className="text-2xl font-bold mb-6 text-slate-700 flex items-center gap-2">
+          <Settings /> Gerador Retiblocos
+        </h1>
+
+        <div className="space-y-6">
+          {/* ...Inputs Básicos... */}
+          <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <label className="block text-sm font-bold text-gray-700 mb-2">Filial SAAM</label>
+            <select 
+              className="w-full p-2 border rounded border-gray-300 bg-white"
+              value={data.branchId}
+              onChange={(e) => setData({...data, branchId: e.target.value})}
+            >
+              {SAAM_BRANCHES.map(b => (
+                <option key={b.id} value={b.id}>{b.city}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-2">
+             <label className="block text-xs font-bold uppercase text-gray-500">Datas</label>
+             <div className="flex gap-2">
+                <input type="date" className="w-1/2 p-1 text-xs border rounded" value={data.reportDate} onChange={(e) => setData({...data, reportDate: e.target.value})} />
+                <input type="date" className="w-1/2 p-1 text-xs border rounded border-gray-300" value={data.metrologyDate} onChange={(e) => setData({...data, metrologyDate: e.target.value})} />
+             </div>
+          </div>
+          
+           <div className="space-y-2">
+              <label className="block text-xs font-bold uppercase text-gray-500">OS / Série / Modelo</label>
+              <input type="text" value={data.os} onChange={(e) => setData({...data, os: e.target.value})} className="w-full p-2 border rounded mb-1" placeholder="OS" />
+              <input type="text" value={data.engineSerial} onChange={(e) => setData({...data, engineSerial: e.target.value})} className="w-full p-2 border rounded mb-1" placeholder="Série" />
+              <input type="text" value={data.engineModel} onChange={(e) => setData({...data, engineModel: e.target.value})} className="w-full p-2 border rounded" placeholder="Modelo" />
+           </div>
+
+           <div className="space-y-2">
+            <label className="block text-xs font-bold uppercase text-gray-500 flex items-center gap-2">
+              <FileText size={14} /> Observações
+            </label>
+            <textarea 
+              value={data.observations}
+              onChange={(e) => setData({...data, observations: e.target.value})}
+              className="w-full p-2 border rounded h-16 text-xs resize-y"
+            />
+          </div>
+
+          <div className="space-y-2">
+             <h3 className="font-bold text-sm uppercase border-b pb-1">Fotos</h3>
+             <div className="grid grid-cols-2 gap-2">
+                {Object.keys(images).map((key) => (
+                  <label key={key} className={`cursor-pointer text-xs p-1 rounded text-center border ${images[key] ? 'bg-green-100 border-green-400' : 'bg-gray-50 border-gray-200'}`}>
+                    <span className="capitalize">{key}</span>
+                    <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(key, e)} />
+                  </label>
+                ))}
+             </div>
+          </div>
+
+          {/* CONTROLES DE MODELO E MARCA */}
+          <div className="space-y-4">
+             <div className="bg-gray-50 p-3 rounded border border-gray-200">
+                <h3 className="font-bold text-xs text-slate-700 mb-2 flex items-center gap-2">
+                  <Wrench size={12}/> Seleção de Motor
+                </h3>
+                
+                {/* SELEÇÃO DE MARCA/MODELO */}
+                <div className="space-y-2 mb-4">
+                  <label className="text-[10px] uppercase text-gray-500 font-bold">Caterpillar (CAT)</label>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => handleModelChange('3056')}
+                      className={`flex-1 py-1 text-xs rounded border ${data.metrologyModel === '3056' ? 'bg-yellow-500 text-white border-yellow-600' : 'bg-white text-gray-700'}`}
+                    >
+                      3056 (6cc)
+                    </button>
+                    <button 
+                      onClick={() => handleModelChange('C4.4')}
+                      className={`flex-1 py-1 text-xs rounded border ${data.metrologyModel === 'C4.4' ? 'bg-yellow-500 text-white border-yellow-600' : 'bg-white text-gray-700'}`}
+                    >
+                      C4.4 (4cc)
+                    </button>
+                  </div>
+
+                  <label className="text-[10px] uppercase text-gray-500 font-bold mt-2 block">Deutz Weichai</label>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => handleModelChange('DEUTZ_6CC')}
+                      className={`flex-1 py-1 text-xs rounded border ${data.metrologyModel === 'DEUTZ_6CC' ? 'bg-blue-600 text-white border-blue-700' : 'bg-white text-gray-700'}`}
+                    >
+                      Weichai (6cc)
+                    </button>
+                  </div>
+                </div>
+
+                {/* NOVO INPUT: Medida Cabeçote */}
+                <div className="mb-2">
+                   <label className="text-[10px] uppercase text-gray-500">Medida Cabeçote</label>
+                   <input 
+                      type="text" 
+                      value={data.metrology.medidaCabecote} 
+                      onChange={(e) => setData({...data, metrology: {...data.metrology, medidaCabecote: e.target.value}})}
+                      className="w-full text-xs border rounded p-1" 
+                      placeholder="Ex: STD, 0,50mm..." 
+                   />
+                </div>
+                <button onClick={randomizeMetrology} className="w-full py-1 bg-slate-200 text-slate-700 border border-slate-300 rounded text-xs hover:bg-slate-300">
+                   <RefreshCw size={10} className="inline mr-1"/> Randomizar Medidas
+                </button>
+             </div>
+             
+             <div className="bg-blue-50 p-3 rounded border border-blue-200">
+                <h3 className="font-bold text-xs text-blue-800 mb-2 flex items-center gap-1"><Activity size={12}/> Dinamômetro</h3>
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                   <div>
+                     <label className="text-[10px] uppercase text-gray-500">Potência (HP)</label>
+                     <input type="number" value={data.dyno.potencia} onChange={(e) => setData({...data, dyno: {...data.dyno, potencia: parseFloat(e.target.value)}})} className="w-full text-xs border rounded p-1"/>
+                   </div>
+                   <div>
+                     <label className="text-[10px] uppercase text-gray-500">Torque (ft-lb)</label>
+                     <input type="number" value={data.dyno.torque} onChange={(e) => setData({...data, dyno: {...data.dyno, torque: parseFloat(e.target.value)}})} className="w-full text-xs border rounded p-1"/>
+                   </div>
+                   <div>
+                     <label className="text-[10px] uppercase text-gray-500">Óleo Lenta (bar)</label>
+                     <input type="number" step="0.1" value={data.dyno.pressaoOleoLenta} onChange={(e) => setData({...data, dyno: {...data.dyno, pressaoOleoLenta: parseFloat(e.target.value)}})} className="w-full text-xs border rounded p-1"/>
+                   </div>
+                   <div>
+                     <label className="text-[10px] uppercase text-gray-500">Óleo Carga (bar)</label>
+                     <input type="number" step="0.1" value={data.dyno.pressaoOleoCarga} onChange={(e) => setData({...data, dyno: {...data.dyno, pressaoOleoCarga: parseFloat(e.target.value)}})} className="w-full text-xs border rounded p-1"/>
+                   </div>
+                </div>
+                <button onClick={randomizeDyno} className="w-full py-1 bg-blue-600 text-white rounded text-xs">Randomizar Teste</button>
+             </div>
+          </div>
+
+          <button 
+            onClick={handlePrint}
+            className="w-full py-4 bg-slate-900 text-white rounded-lg font-bold hover:bg-black flex justify-center items-center gap-2 mt-4 shadow-lg border border-slate-700"
+          >
+            <Save size={20} /> SALVAR PDF
+          </button>
+        </div>
+      </div>
+
+      {/* --- PREVIEW AREA (A4 Styles) --- */}
+      <div className="flex-1 bg-gray-500 p-8 overflow-y-auto print:p-0 print:bg-white print:overflow-visible">
+        
+        {/* PAGE 1: CAPA */}
+        <div className="a4-page bg-white shadow-2xl mx-auto mb-8 relative flex flex-col print:shadow-none print:mb-0 print:break-after-page">
+           <div className={`h-24 border-b-2 ${currentBrand.name === 'CAT' ? 'border-yellow-500' : 'border-blue-600'} flex items-center justify-between px-12 pt-4`}>
+              <div className={`text-4xl font-black italic tracking-tighter ${currentBrand.name === 'CAT' ? 'text-slate-900' : 'text-blue-800'}`}>
+                {currentBrand.logoText}
+              </div>
+              <div className="flex gap-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                {currentBrand.name === 'CAT' ? (
+                  <>
+                    <span>Mercedes-Benz</span>
+                    <span>Volvo</span>
+                    <span>Cummins</span>
+                    <span>Weichai Deutz</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Caterpillar</span>
+                    <span>Mercedes-Benz</span>
+                    <span>Volvo</span>
+                    <span>Cummins</span>
+                  </>
+                )}
+              </div>
+           </div>
+
+           <div className="flex-1 flex flex-col justify-center px-16 relative">
+             <div className="mb-12">
+               <div className={`inline-block ${currentBrand.name === 'CAT' ? 'bg-yellow-500' : 'bg-blue-600'} text-white font-bold px-4 py-1 text-sm tracking-widest mb-2`}>
+                 RETIBLOCOS {data.reportDate.split('-')[0]}
+               </div>
+               <h1 className="text-6xl font-black text-slate-900 leading-none mb-2">LAUDO<br/>TÉCNICO</h1>
+               <div className="h-2 w-32 bg-slate-900"></div>
+               <p className="text-xl text-slate-500 mt-4 font-light uppercase tracking-wide">Retífica e Recuperação de Motores</p>
+             </div>
+
+             <div className="w-full h-80 bg-gray-100 border-2 border-slate-200 mb-12 relative overflow-hidden group">
+                {images.capa ? (
+                  <img src={images.capa} className="w-full h-full object-cover" alt="Capa" />
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full text-gray-300">
+                     <Camera size={48} />
+                     <span className="text-sm mt-2 font-bold uppercase">Foto da Capa</span>
+                  </div>
+                )}
+             </div>
+
+             <div className="grid grid-cols-2 border-t border-slate-200 pt-8 gap-8">
+               <div>
+                 <h3 className={`text-xs font-bold ${currentBrand.name === 'CAT' ? 'text-yellow-600' : 'text-blue-600'} uppercase mb-1`}>Cliente</h3>
+                 <p className="text-2xl font-bold text-slate-800 leading-tight">SAAM TOWAGE</p>
+                 <p className="text-sm text-slate-500">{currentBranch.city}</p>
+               </div>
+               <div className="text-right">
+                  <h3 className={`text-xs font-bold ${currentBrand.name === 'CAT' ? 'text-yellow-600' : 'text-blue-600'} uppercase mb-1`}>Identificação</h3>
+                  <p className="font-mono text-sm text-slate-600"><span className="font-bold">OS:</span> {data.os}</p>
+                  <p className="font-mono text-sm text-slate-600"><span className="font-bold">Série:</span> {data.engineSerial}</p>
+                  <p className="font-mono text-sm text-slate-600 mt-1"><span className="font-bold">Data:</span> {formatDate(data.reportDate)}</p>
+               </div>
+             </div>
+           </div>
+           <FooterSimples page="1" />
+        </div>
+
+        {/* PAGE 2: SUMÁRIO */}
+        <div className="a4-page bg-white shadow-2xl mx-auto mb-8 p-12 relative print:shadow-none print:mb-0 print:break-after-page flex flex-col">
+            <HeaderOsimples os={data.os} brand={currentBrand} />
+            <div className={`mb-10 bg-slate-50 border-l-4 ${currentBrand.name === 'CAT' ? 'border-yellow-500' : 'border-blue-600'} p-6 shadow-sm`}>
+              <h2 className="text-lg font-bold text-slate-900 mb-4 uppercase tracking-wide">Dados do Serviço</h2>
+              <div className="grid grid-cols-2 gap-y-4 gap-x-12 text-sm">
+                 <div className="space-y-1">
+                    <p className="text-gray-500 text-xs uppercase font-bold">Razão Social</p>
+                    <p className="font-bold text-slate-800">SAAM TOWAGE BRASIL S.A.</p>
+                 </div>
+                 <div className="space-y-1">
+                    <p className="text-gray-500 text-xs uppercase font-bold">CNPJ</p>
+                    <p className="font-mono text-slate-700">{currentBranch.cnpj}</p>
+                 </div>
+                 <div className="space-y-1">
+                    <p className="text-gray-500 text-xs uppercase font-bold">Endereço</p>
+                    <p className="text-slate-700">{currentBranch.address}</p>
+                 </div>
+                 <div className="space-y-1">
+                    <p className="text-gray-500 text-xs uppercase font-bold">Localidade</p>
+                    <p className="text-slate-700">{currentBranch.city}</p>
+                 </div>
+              </div>
+            </div>
+            <div className="flex-1">
+              <h2 className="text-lg font-bold text-slate-900 mb-6 uppercase tracking-wide border-b pb-2">Sumário Executivo</h2>
+              <div className="space-y-4">
+                  {[
+                  { title: "1. RECEBIMENTO", desc: "Registro fotográfico, identificação visual e conferência de periféricos na chegada." },
+                  { title: "2. DESMONTAGEM", desc: "Abertura completa do motor e inspeção visual de falhas catastróficas." },
+                  { title: "3. LIMPEZA & ANÁLISE", desc: "Lavagem química e inspeção metrológica de componentes críticos." },
+                  { title: "4. CONTROLE DIMENSIONAL", desc: "Medição de folgas e interferências com instrumentos calibrados." },
+                  { title: "5. TESTE DE PERFORMANCE", desc: "Teste de carga em dinamômetro com monitoramento de curvas de torque e potência." },
+                  { title: "6. ENTREGA", desc: `Pintura final padrão ${currentBrand.paint} e embalagem para transporte.` }
+                ].map((item, idx) => (
+                  <div key={idx} className="flex group">
+                    <div className={`w-12 text-2xl font-black ${currentBrand.name === 'CAT' ? 'group-hover:text-yellow-500' : 'group-hover:text-blue-600'} text-gray-200 transition-colors pt-1`}>0{idx + 1}</div>
+                    <div className="pb-4 border-b border-gray-100 w-full">
+                      <h3 className="font-bold text-slate-900 text-sm">{item.title.split('. ')[1]}</h3>
+                      <p className="text-slate-500 text-xs mt-1">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <FooterSimples page="2" />
+        </div>
+
+        {/* PAGE 3: FOTOS */}
+        <div className="a4-page bg-white shadow-2xl mx-auto mb-8 p-12 relative print:shadow-none print:mb-0 print:break-after-page">
+           <HeaderOsimples os={data.os} brand={currentBrand} />
+           <div className="mb-8">
+             <h2 className={`text-lg font-bold text-slate-800 border-l-4 ${currentBrand.name === 'CAT' ? 'border-yellow-500' : 'border-blue-600'} pl-3 mb-2`}>1. RECEBIMENTO E AVALIAÇÃO</h2>
+             <p className="text-xs text-slate-500 mb-4 text-justify leading-relaxed">
+               O equipamento foi recebido e inspecionado. As imagens abaixo documentam o estado inicial de chegada.
+             </p>
+             <div className="grid grid-cols-2 gap-4">
+                <PhotoPlaceholder src={images.recebimento} label="Vista Geral (Recebimento)" />
+                <PhotoPlaceholder src={images.bloco} label="Detalhe Serial / Bloco" />
+             </div>
+           </div>
+           <div className="mt-8">
+             <h2 className={`text-lg font-bold text-slate-800 border-l-4 ${currentBrand.name === 'CAT' ? 'border-yellow-500' : 'border-blue-600'} pl-3 mb-2`}>2. DESMONTAGEM TÉCNICA</h2>
+             <p className="text-xs text-slate-500 mb-4 text-justify leading-relaxed">
+               Durante a desmontagem controlada, os componentes foram segregados e identificados.
+             </p>
+             <div className="grid grid-cols-2 gap-4">
+                <PhotoPlaceholder src={images.desmontagem} label="Desmontagem (Carter/Inferior)" />
+                <PhotoPlaceholder src={images.virabrequim} label="Inspeção Virabrequim" />
+             </div>
+           </div>
+           <FooterSimples page="3" />
+        </div>
+
+        {/* PAGE 4: METROLOGIA DINAMICA */}
+        <div className="a4-page bg-white shadow-2xl mx-auto mb-8 p-8 relative print:shadow-none print:mb-0 print:break-after-page text-xs">
+           <HeaderOsimples os={data.os} brand={currentBrand} />
+           <div className={`bg-slate-900 text-white p-2 mb-4 flex justify-between items-center ${currentBrand.name === 'DEUTZ' ? 'bg-blue-900' : 'bg-slate-900'}`}>
+             <h2 className="font-bold text-base pl-2">FICHA TÉCNICA DE CONTROLE DIMENSIONAL</h2>
+             <span className={`${currentBrand.name === 'CAT' ? 'text-yellow-500' : 'text-white'} font-mono text-xs pr-2`}>REF: {currentBrand.name}-{data.metrologyModel}</span>
+           </div>
+           
+           <div className="grid grid-cols-3 gap-1 mb-6 text-[10px] uppercase font-bold text-slate-500 border-b pb-2">
+             <div>Motor: <span className="text-slate-900">{data.engineModel}</span></div>
+             <div className="text-center">Série: <span className="text-slate-900">{data.engineSerial}</span></div>
+             <div className="text-right">Data: <span className="text-slate-900">{formatDate(data.metrologyDate)}</span></div>
+           </div>
+
+           {/* TABELAS COMPACTAS */}
+           <div className="space-y-6 font-mono text-[10px]">
+             
+             {/* VIRABREQUIM */}
+             <div>
+                <h3 className="font-bold text-slate-800 mb-1 border-b border-slate-300">01. VIRABREQUIM</h3>
+                <table className="w-full border-collapse border border-slate-300 text-center">
+                  <thead>
+                    <tr className="bg-gray-100 text-gray-600">
+                      <th className="border border-slate-300 p-1 w-24 text-left pl-2">MEDIDA (mm)</th>
+                      {data.metrology.munhoes.map((_, i) => <th key={i} className="border border-slate-300 p-1">{i + 1}º</th>)}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td className="font-bold border border-slate-300 text-left pl-2">Ø MUNHÕES</td>
+                      {data.metrology.munhoes.map((val, i) => <td key={i} className="border border-slate-300 p-1">{val.toFixed(2)}</td>)}
+                    </tr>
+                    <tr>
+                      <td className="font-bold border border-slate-300 text-left pl-2 bg-gray-50">FOLGA RADIAL</td>
+                      {data.metrology.folgaMancal.map((val, i) => <td key={i} className="border border-slate-300 p-1 bg-gray-50">{val.toFixed(2)}</td>)}
+                    </tr>
+                  </tbody>
+                </table>
+                <div className="h-1"></div>
+                <table className="w-full border-collapse border border-slate-300 text-center">
+                   <thead>
+                    <tr className="bg-gray-100 text-gray-600">
+                      <th className="border border-slate-300 p-1 w-24 text-left pl-2">MEDIDA (mm)</th>
+                      {data.metrology.moentes.map((_, i) => <th key={i} className="border border-slate-300 p-1">{i + 1}º</th>)}
+                      <th className="border border-slate-300 bg-gray-200 w-12"></th>
+                    </tr>
+                   </thead>
+                   <tbody>
+                    <tr>
+                      <td className="font-bold border border-slate-300 text-left pl-2">Ø MOENTES</td>
+                      {data.metrology.moentes.map((val, i) => <td key={i} className="border border-slate-300 p-1">{val.toFixed(2)}</td>)}
+                      <td className="border border-slate-300 bg-gray-100"></td>
+                    </tr>
+                    <tr>
+                      <td className="font-bold border border-slate-300 text-left pl-2 bg-gray-50">FOLGA RADIAL</td>
+                      {data.metrology.folgaBiela.map((val, i) => <td key={i} className="border border-slate-300 p-1 bg-gray-50">{val.toFixed(2)}</td>)}
+                      <td className="border border-slate-300 bg-gray-100"></td>
+                    </tr>
+                   </tbody>
+                </table>
+                <div className="mt-1 text-[9px] text-right text-slate-500">FOLGA AXIAL: {data.metrology.folgaAxial}mm</div>
+             </div>
+
+             {/* BLOCO E PISTÕES */}
+             <div className="grid grid-cols-1 gap-4">
+               <div>
+                  <h3 className="font-bold text-slate-800 mb-1 border-b border-slate-300">02. CONJUNTO DE FORÇA</h3>
+                  <table className="w-full border-collapse border border-slate-300 text-center">
+                    <thead>
+                      <tr className="bg-gray-100 text-gray-600">
+                        <th className="border border-slate-300 p-1 w-24 text-left pl-2">CILINDRO</th>
+                        {data.metrology.alturaPistao.map((_, i) => <th key={i} className="border border-slate-300 p-1">{i + 1}º</th>)}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td className="font-bold border border-slate-300 text-left pl-2">ALT. PISTÃO</td>
+                        {data.metrology.alturaPistao.map((val, i) => <td key={i} className="border border-slate-300 p-1">{val.toFixed(2)}</td>)}
+                      </tr>
+                      <tr>
+                        <td className="font-bold border border-slate-300 text-left pl-2">PROJ. CAMISA</td>
+                        {data.metrology.alturaCamisa.map((val, i) => <td key={i} className="border border-slate-300 p-1">{val.toFixed(2)}</td>)}
+                      </tr>
+                       <tr>
+                         <td className="font-bold border border-slate-300 text-left pl-2 bg-gray-50">FOLGA PISTÃO</td>
+                         {data.metrology.folgaPistao.map((val, i) => <td key={i} className="border border-slate-300 p-1 bg-gray-50">{val.toFixed(2)}</td>)}
+                      </tr>
+                    </tbody>
+                  </table>
+               </div>
+             </div>
+
+             {/* CABEÇOTE (Separado) */}
+             <div>
+                <h3 className="font-bold text-slate-800 mb-1 border-b border-slate-300">03. CABEÇOTE</h3>
+                <table className="w-full border-collapse border border-slate-300 text-center">
+                    <thead>
+                        <tr className="bg-gray-100 text-gray-600">
+                           <th className="border border-slate-300 p-1 w-24 text-left pl-2">MEDIDA (mm)</th>
+                           {data.metrology.alturaValvula.map((_, i) => <th key={i} className="border border-slate-300 p-1">{i + 1}º</th>)}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td className="font-bold border border-slate-300 text-left pl-2">ALT. VÁLVULA</td>
+                            {data.metrology.alturaValvula.map((val, i) => <td key={i} className="border border-slate-300 p-1">{val.toFixed(2)}</td>)}
+                        </tr>
+                        <tr>
+                            <td className="font-bold border border-slate-300 text-left pl-2 bg-gray-50">FOLGA GUIA</td>
+                            {data.metrology.folgaGuia.map((val, i) => <td key={i} className="border border-slate-300 p-1 bg-gray-50">{val.toFixed(2)}</td>)}
+                        </tr>
+                        {/* ALTURA CABEÇOTE - LINHA ÚNICA */}
+                        <tr className="bg-gray-100">
+                            <td className="font-bold border border-slate-300 text-left pl-2 border-r-0">ALTURA CABEÇOTE</td>
+                            <td colSpan={data.metrology.alturaValvula.length} className="border border-slate-300 border-l-0 text-left pl-4 font-bold text-slate-900">
+                               {data.metrology.medidaCabecote}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+             </div>
+
+             {/* COMANDO (Separado) */}
+             <div>
+                <h3 className="font-bold text-slate-800 mb-1 border-b border-slate-300">04. COMANDO</h3>
+                <table className="w-full border-collapse border border-slate-300 text-center">
+                    <thead>
+                        <tr className="bg-gray-100 text-gray-600">
+                           <th className="border border-slate-300 p-1 w-24 text-left pl-2">MANCAL</th>
+                           {data.metrology.folgaBuchaComando.map((_, i) => <th key={i} className="border border-slate-300 p-1">{i + 1}º</th>)}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td className="font-bold border border-slate-300 text-left pl-2">FOLGA BUCHA</td>
+                            {data.metrology.folgaBuchaComando.map((val, i) => <td key={i} className="border border-slate-300 p-1">{val.toFixed(2)}</td>)}
+                        </tr>
+                    </tbody>
+                </table>
+             </div>
+
+           </div>
+           
+           <div className="mt-8 border-l-4 border-green-600 bg-green-50 p-3 text-[10px] text-green-900">
+              <strong>STATUS METROLÓGICO: APROVADO</strong><br/>
+              Todos os componentes foram verificados e encontram-se dentro das tolerâncias.
+           </div>
+           <FooterSimples page="4" />
+        </div>
+
+        {/* PAGE 5: DINAMÔMETRO (GRÁFICOS EMPILHADOS E LIMPOS) */}
+        <div className="a4-page bg-white shadow-2xl mx-auto mb-8 relative print:shadow-none print:mb-0 print:break-after-page flex flex-col">
+           <div className="p-8 flex-1 flex flex-col">
+             <HeaderOsimples os={data.os} brand={currentBrand} />
+             
+             <div className="flex justify-between items-center mb-6">
+                <h2 className={`text-xl font-bold text-slate-800 border-l-4 ${currentBrand.name === 'CAT' ? 'border-blue-600' : 'border-red-600'} pl-3`}>TESTE DE DINAMÔMETRO</h2>
+                <div className="text-right">
+                  <div className="text-[10px] text-gray-500 uppercase">System Report</div>
+                  <div className={`font-bold ${currentBrand.name === 'CAT' ? 'text-blue-900' : 'text-red-900'}`}>TAYLOR DYNAMOMETER INC.</div>
+                </div>
+             </div>
+
+             {/* MACHINE REPORT CONTAINER */}
+             <div className="border-2 border-gray-800 p-6 font-mono text-xs leading-relaxed bg-gray-50 relative overflow-hidden flex-1 flex flex-col">
+                {/* "Dot Matrix" texture overlay */}
+                <div className="absolute inset-0 pointer-events-none opacity-5" style={{backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '4px 4px'}}></div>
+                
+                {/* ...Header do relatório... */}
+                <div className="flex justify-between border-b-2 border-dashed border-gray-400 pb-4 mb-4">
+                   <div>
+                      <p><strong>SYSTEM:</strong> POWER TEST 3.0</p>
+                      <p><strong>UNIT ID:</strong> {data.engineModel}</p>
+                      <p><strong>S/N:</strong> {data.engineSerial}</p>
+                   </div>
+                   <div className="text-right">
+                      <p><strong>DATE:</strong> {formatDate(data.metrologyDate)}</p>
+                      <p><strong>TIME:</strong> 14:32:05</p>
+                      <p><strong>OPERATOR:</strong> RETIBLOCOS_AUTO</p>
+                   </div>
+                </div>
+
+                {/* ...Dados Numéricos... */}
+                <div className="mb-6">
+                   <h4 className="font-bold border-b border-gray-800 mb-2">TEST RESULTS / FINAL REPORT</h4>
+                   <div className="grid grid-cols-2 gap-x-12 gap-y-2">
+                      <div className="flex justify-between"><span>MAX POWER...........:</span> <strong>{data.dyno.potencia.toFixed(1)} HP</strong></div>
+                      <div className="flex justify-between"><span>RATED SPEED.........:</span> <span>{data.dyno.rpmCarga} RPM</span></div>
+                      
+                      <div className="flex justify-between"><span>MAX TORQUE..........:</span> <strong>{data.dyno.torque.toFixed(1)} ft-lb</strong></div>
+                      <div className="flex justify-between"><span>PEAK TORQUE SPEED...:</span> <span>1450 RPM</span></div>
+                      
+                      <div className="flex justify-between"><span>OIL PRESS (LOW).....:</span> <span>{data.dyno.pressaoOleoLenta.toFixed(1)} bar</span></div>
+                      <div className="flex justify-between"><span>OIL PRESS (HIGH)....:</span> <strong>{data.dyno.pressaoOleoCarga.toFixed(1)} bar</strong></div>
+                      
+                      <div className="flex justify-between"><span>COOLANT TEMP........:</span> <span>{data.dyno.tempAgua} °C</span></div>
+                      <div className="flex justify-between"><span>BOOST PRESS.........:</span> <span>{data.dyno.pressaoTurbo} kPa</span></div>
+                   </div>
+                </div>
+
+                {/* GRÁFICOS EMPILHADOS (VERTICAL STACK) */}
+                <div className="flex flex-col gap-6 mt-4 flex-1">
+                    
+                    {/* GRÁFICO 1: MARCHA LENTA */}
+                    <div className="w-full">
+                        <h5 className="text-[10px] font-bold mb-1">ESTABILIDADE MARCHA LENTA (IDLE)</h5>
+                        <div className="h-28 w-full relative bg-white border-b border-l border-gray-800">
+                            <svg className="w-full h-full" viewBox="0 0 600 100" preserveAspectRatio="none">
+                                {/* Gridlines */}
+                                <line x1="0" y1="50" x2="600" y2="50" stroke="#ddd" strokeWidth="1" strokeDasharray="4,2" />
+                                <line x1="0" y1="20" x2="600" y2="20" stroke="#ddd" strokeWidth="1" strokeDasharray="4,2" />
+                                {/* Curve */}
+                                <path d={`M0,100 ${generateTimeChart('idle')}`} fill="none" stroke="#000" strokeWidth="1.5" />
+                            </svg>
+                            <div className="absolute bottom-1 left-1 text-[8px] text-gray-500">0s</div>
+                            <div className="absolute bottom-1 right-1 text-[8px] text-gray-500">60s</div>
+                            <div className="absolute top-1 left-1 text-[8px] font-bold bg-white px-1">~{data.dyno.rpmLenta} RPM</div>
+                        </div>
+                    </div>
+
+                    {/* GRÁFICO 2: CARGA MÁXIMA */}
+                    <div className="w-full">
+                        <h5 className="text-[10px] font-bold mb-1">TESTE DE CARGA (LOAD @ 1800)</h5>
+                        <div className="h-28 w-full relative bg-white border-b border-l border-gray-800">
+                            <svg className="w-full h-full" viewBox="0 0 600 100" preserveAspectRatio="none">
+                                {/* Gridlines */}
+                                <line x1="0" y1="50" x2="600" y2="50" stroke="#ddd" strokeWidth="1" strokeDasharray="4,2" />
+                                {/* Curve - Load Ramp */}
+                                <path d={`M0,100 ${generateTimeChart('load')}`} fill="none" stroke="#000" strokeWidth="1.5" />
+                            </svg>
+                            <div className="absolute bottom-1 left-1 text-[8px] text-gray-500">0s</div>
+                            <div className="absolute bottom-1 right-1 text-[8px] text-gray-500">60s</div>
+                            <div className="absolute top-1 right-1 text-[8px] font-bold bg-white px-1">1800 RPM (STABLE)</div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div className="text-center border-t-2 border-gray-800 pt-2 mt-4">
+                   <p className="text-lg font-bold">*** TEST PASSED / APROVADO ***</p>
+                   <p className="text-[10px]">NO INSTABILITY DETECTED - LOAD TEST CONFIRMED</p>
+                </div>
+             </div>
+           </div>
+           <FooterSimples page="5" />
+        </div>
+
+        {/* PAGE 6: PEÇAS E CONCLUSÃO */}
+         <div className="a4-page bg-white shadow-2xl mx-auto mb-8 p-12 relative print:shadow-none print:mb-0 print:break-after-page flex flex-col justify-between">
+           <div>
+             <HeaderOsimples os={data.os} brand={currentBrand} />
+             <h2 className="text-lg font-bold text-slate-800 mb-4 uppercase tracking-wide border-b border-slate-300 pb-2">Peças Substituídas (Overhaul)</h2>
+             <div className="columns-2 text-[10px] gap-8 leading-tight text-slate-600 font-mono mb-8">
+               <ul className="list-none space-y-1">
+                 {currentPartsList.map((part, index) => (
+                   <li key={index} className="break-inside-avoid border-b border-gray-100 pb-0.5 flex">
+                     <span className="w-4 font-bold text-gray-400 mr-1">{index + 1}.</span> {part}
+                   </li>
+                 ))}
+               </ul>
+             </div>
+
+             <h2 className="text-lg font-bold text-slate-800 mb-2 mt-8 uppercase tracking-wide border-b border-slate-300 pb-2">Acabamento</h2>
+             <div className="flex gap-6 items-start h-32">
+               <div className="w-2/3 text-xs text-gray-600 space-y-2 text-justify">
+                 <p>O motor foi submetido a limpeza final, aplicação de fundo fosfatizante e pintura em padrão <strong>{currentBrand.paint}</strong>.</p>
+                 <p>Encontra-se paletizado, cintado e protegido com filme stretch para transporte, acompanhado da nota fiscal e deste laudo técnico.</p>
+               </div>
+               <div className="w-1/3 h-full border-2 border-slate-200 overflow-hidden relative">
+                  {images.pintura ? <img src={images.pintura} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gray-100 flex items-center justify-center text-xs text-gray-400 font-bold uppercase">Foto Pintura</div>}
+               </div>
+             </div>
+           </div>
+
+           {data.observations && (
+             <div className={`mt-4 border ${currentBrand.name === 'CAT' ? 'border-yellow-200 bg-yellow-50' : 'border-blue-200 bg-blue-50'} p-4 rounded text-xs text-slate-700`}>
+               <h4 className={`font-bold ${currentBrand.name === 'CAT' ? 'text-yellow-700' : 'text-blue-700'} uppercase mb-1 flex items-center gap-2`}><FileText size={12} /> Observações Técnicas Adicionais</h4>
+               <p className="whitespace-pre-wrap">{data.observations}</p>
+             </div>
+           )}
+
+           <div className="border-t-2 border-slate-800 pt-8 mt-4 flex justify-center">
+              <div className="text-center relative">
+                <div className="h-16 flex items-end justify-center relative w-64 mx-auto">
+                   <div className="w-64 border-b border-slate-900 z-10"></div>
+                </div>
+                <p className="font-bold text-sm uppercase mt-2">Controle de Qualidade</p>
+                <p className="text-xs text-gray-500">Retiblocos Ltda</p>
+              </div>
+           </div>
+           <FooterSimples page="6" />
+        </div>
+
+      </div>
+
+      <style>{`
+        .a4-page { width: 210mm; min-height: 297mm; box-sizing: border-box; background-color: white; }
+        @media print {
+          @page { size: A4; margin: 0; }
+          body { -webkit-print-color-adjust: exact; background: white; }
+          .print\\:hidden { display: none !important; }
+          .print\\:shadow-none { shadow: none !important; }
+          .print\\:mb-0 { margin-bottom: 0 !important; }
+          .print\\:p-0 { padding: 0 !important; }
+          .print\\:bg-white { background: white !important; }
+          .print\\:overflow-visible { overflow: visible !important; }
+          .print\\:break-after-page { break-after: page; page-break-after: always; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+// Componentes Auxiliares
+function HeaderOsimples({ os, brand }) {
+  return (
+    <div className={`flex justify-between items-end border-b-2 ${brand.name === 'CAT' ? 'border-yellow-500' : 'border-blue-600'} pb-2 mb-6`}>
+      <div>
+        <div className="text-xl font-black italic tracking-tighter text-slate-900">{brand.logoText}</div>
+        <div className="text-[10px] text-gray-400 uppercase tracking-widest leading-none">Service Report</div>
+      </div>
+      <div className="text-right">
+        <div className="font-mono font-bold text-sm bg-gray-100 px-2 rounded">OS: {os}</div>
+      </div>
+    </div>
+  );
+}
+
+function FooterSimples({ page }) {
+  return (
+    <div className="absolute bottom-4 right-8 w-full px-16 flex justify-between items-center text-[9px] text-gray-300">
+      <span>RETIBLOCOS - LAUDO TÉCNICO DIGITAL</span>
+      <span>PÁGINA {page}</span>
+    </div>
+  );
+}
+
+function PhotoPlaceholder({ src, label }) {
+  return (
+    <div className="w-full h-64 border-2 border-slate-200 bg-gray-50 flex flex-col relative overflow-hidden group">
+      {src ? (
+        <img src={src} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt={label} />
+      ) : (
+        <div className="flex-1 flex flex-col items-center justify-center text-gray-300 text-xs text-center px-4">
+          <Camera size={24} className="mb-2 opacity-50" />
+          <span className="font-bold uppercase tracking-wider">Aguardando Imagem</span>
+          <span className="text-[10px] mt-1 text-gray-400">{label}</span>
+        </div>
+      )}
+    </div>
+  );
+}
