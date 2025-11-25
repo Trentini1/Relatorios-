@@ -84,6 +84,13 @@
             finalizacao: "Após a conclusão dos testes de performance, o motor passou pelos acabamentos finais, que incluíram o processo de pintura para garantir a proteção contra corrosão e desgaste. A pintura foi realizada com materiais de alta qualidade, adequados para as condições de operação do motor. Após a finalização da pintura, o motor foi cuidadosamente embalado e paletizado para garantir sua segurança durante o transporte."
         };
 
+        // DADOS DE DINAMÔMETRO PADRÃO POR MODELO (ATUALIZADO)
+        const DYNO_DEFAULTS = {
+            '3056': { rpmLenta: 850, rpmCarga: 1800, potencia: 153.0, torque: 450.0, pressaoOleoLenta: 1.5, pressaoOleoCarga: 3.5, pressaoTurbo: 140, tempAgua: 88 },
+            'C4.4': { rpmLenta: 850, rpmCarga: 1800, potencia: 145.0, torque: 425.0, pressaoOleoLenta: 1.5, pressaoOleoCarga: 3.5, pressaoTurbo: 140, tempAgua: 88 },
+            'DEUTZ_6CC': { rpmLenta: 850, rpmCarga: 1800, potencia: 161.0, torque: 470.0, pressaoOleoLenta: 1.5, pressaoOleoCarga: 3.5, pressaoTurbo: 140, tempAgua: 88 }
+        };
+
         const METROLOGY_PROFILES = {
             '3056': {
                 brand: 'CAT', cylinders: 6, mainBearings: 7,
@@ -180,21 +187,17 @@
             "Calço de Pressão Deutz Weichai - 6 un", "Elemento Bomba Injetora Deutz Weichai - 6 un", "Válvula de Retenção Deutz Weichai - 6 un",
             "Kit Reparo Bomba Manual Deutz Weichai - 1 un", "Kit Reparo Bomba Injetora Deutz Weichai - 1 un", "Retentor Carcaça Deutz Weichai - 2 un",
             "Porta Válvula Bomba Deutz Weichai - 6 un", "Óleo Motor 15W40 - 20 un", "Silicone Alta Temperatura - 2 un",
-            "Tinta Azul Motor Deutz Weichai - 1 un", "Thynner - 5 un", "Jet Cooler Deutz Weichai - 6 un", "Pino de Pistão Deutz Weichai - 6 un",
-            "Trava de Pistão Deutz Weichai - 12 un", "Jogo de Anéis STD Deutz Weichai - 6 un", "Válvula de Admissão Deutz Weichai - 6 un",
-            "Válvula de Escape Deutz Weichai - 6 un", "Guias de Válvulas Admissão Deutz Weichai - 6 un", "Guias de Válvula Escape Deutz Weichai - 6 un",
-            "Selos do Cabeçote Deutz Weichai - 24 un", "Vedadores de Válvula Deutz Weichai - 12 un", "Junta Cabeçote Deutz Weichai - 6 un",
-            "Calço de Camisa Deutz Weichai - 6 un", "Jogo de Junta Inferior Deutz Weichai - 1 un", "Anel de Borracha Camisa Deutz Weichai - 6 un",
-            "Borracha de Camisa Inferior Deutz Weichai - 12 un", "Junta Coletor de Admissão Deutz Weichai - 6 un", "Mangueira FL/Radiador Deutz Weichai - 1 un",
-            "Mangueira da Flauta Deutz Weichai - 6 un", "Bucha de Biela JG Deutz Weichai - 6 un", "Bucha Comando JG Deutz Weichai - 1 un",
-            "Bronzinas de Biela STD Deutz Weichai - 1 un", "Bronzinas de Mancal STD Deutz Weichai - 1 un", "Pista Retentor Dianteiro Deutz Weichai - 1 un",
-            "Bronzina Central JG Deutz Weichai - 1 un", "Bomba de Óleo Deutz Weichai - 1 un", "Camisa de Cilindro STD Deutz Weichai - 6 un",
-            "Pistão STD Deutz Weichai - 6 un"
+            "Tinta Azul Motor Deutz Weichai - 1 un", "Thynner - 5 un", "Jet Cooler Deutz Weichai - 6 un",
+            "Pino de Pistão Deutz Weichai - 6 un", "Trava de Pistão Deutz Weichai - 12 un", "Jogo de Anéis STD Deutz Weichai - 6 un",
+            "Válvula de Admissão Deutz Weichai - 6 un", "Válvula de Escape Deutz Weichai - 6 un", "Guias de Válvulas Admissão Deutz Weichai - 6 un",
+            "Guias de Válvula Escape Deutz Weichai - 6 un", "Selos do Cabeçote Deutz Weichai - 24 un", "Vedadores de Válvula Deutz Weichai - 12 un",
+            "Junta Cabeçote Deutz Weichai - 6 un", "Calço de Camisa Deutz Weichai - 6 un", "Jogo de Junta Inferior Deutz Weichai - 1 un",
+            "Anel de Borracha Camisa Deutz Weichai - 6 un", "Borracha de Camisa Inferior Deutz Weichai - 12 un", "Junta Coletor de Admissão Deutz Weichai - 6 un",
+            "Mangueira FL/Radiador Deutz Weichai - 1 un", "Mangueira da Flauta Deutz Weichai - 6 un", "Bucha de Biela JG Deutz Weichai - 6 un",
+            "Bucha Comando JG Deutz Weichai - 1 un", "Bronzinas de Biela STD Deutz Weichai - 1 un", "Bronzinas de Mancal STD Deutz Weichai - 1 un",
+            "Pista Retentor Dianteiro Deutz Weichai - 1 un", "Bronzina Central JG Deutz Weichai - 1 un", "Bomba de Óleo Deutz Weichai - 1 un",
+            "Camisa de Cilindro STD Deutz Weichai - 6 un", "Pistão STD Deutz Weichai - 6 un"
         ];
-
-        const BASE_DYNO = {
-            rpmLenta: 850, rpmCarga: 1800, potencia: 134.0, torque: 350.0, pressaoOleoLenta: 1.5, pressaoOleoCarga: 3.5, pressaoTurbo: 140, tempAgua: 88
-        };
 
         const getTodayDate = () => new Date().toISOString().split('T')[0];
         const formatDate = (date) => date ? date.split('-').reverse().join('/') : '';
@@ -204,13 +207,13 @@
                 os: '14937', engineModel: 'CAT 3056', engineSerial: 'GSN01018', branchId: 'riogrande',
                 reportDate: getTodayDate(), metrologyDate: getTodayDate(), observations: '',
                 metrologyModel: '3056', metrology: JSON.parse(JSON.stringify(METROLOGY_PROFILES['3056'].defaults)),
-                dyno: JSON.parse(JSON.stringify(BASE_DYNO))
+                dyno: JSON.parse(JSON.stringify(DYNO_DEFAULTS['3056'])),
+                chartSeed: Math.random() // Semente para variação visual dos gráficos
             });
             const [images, setImages] = useState({});
             const [validationHash, setValidationHash] = useState('');
 
             useEffect(() => {
-                // Gerar hash aleatório para "autenticação"
                 setValidationHash(Math.random().toString(36).substring(2, 15).toUpperCase() + Math.random().toString(36).substring(2, 6).toUpperCase());
             }, [data.os]);
 
@@ -228,7 +231,8 @@
                 setData(prev => ({
                     ...prev, metrologyModel: newModel,
                     engineModel: newModel === 'C4.4' ? 'CAT C4.4' : newModel === '3056' ? 'CAT 3056' : 'DEUTZ WP6',
-                    metrology: JSON.parse(JSON.stringify(newProfile.defaults))
+                    metrology: JSON.parse(JSON.stringify(newProfile.defaults)),
+                    dyno: JSON.parse(JSON.stringify(DYNO_DEFAULTS[newModel] || DYNO_DEFAULTS['3056']))
                 }));
             };
 
@@ -252,32 +256,69 @@
             const randomizeDyno = () => {
                const vary = (val, rng) => Math.round((val + (Math.random() - 0.5) * rng) * 10) / 10;
                setData(prev => ({...prev, dyno: {
-                   rpmLenta: Math.round(vary(BASE_DYNO.rpmLenta, 20)),
-                   rpmCarga: Math.round(vary(BASE_DYNO.rpmCarga, 30)),
-                   potencia: vary(BASE_DYNO.potencia, 5), torque: vary(BASE_DYNO.torque, 10),
-                   pressaoOleoLenta: Math.max(1.25, vary(BASE_DYNO.pressaoOleoLenta, 0.3)),
-                   pressaoOleoCarga: Math.max(3.0, vary(BASE_DYNO.pressaoOleoCarga, 0.5)),
-                   pressaoTurbo: Math.round(vary(BASE_DYNO.pressaoTurbo, 10)),
-                   tempAgua: Math.round(vary(BASE_DYNO.tempAgua, 3))
+                   rpmLenta: Math.round(vary(DYNO_DEFAULTS[data.metrologyModel].rpmLenta, 20)),
+                   rpmCarga: Math.round(vary(DYNO_DEFAULTS[data.metrologyModel].rpmCarga, 30)),
+                   potencia: vary(DYNO_DEFAULTS[data.metrologyModel].potencia, 2), // Variação pequena na potência
+                   torque: vary(DYNO_DEFAULTS[data.metrologyModel].torque, 5),     // Variação pequena no torque
+                   pressaoOleoLenta: Math.max(1.25, vary(DYNO_DEFAULTS[data.metrologyModel].pressaoOleoLenta, 0.3)),
+                   pressaoOleoCarga: Math.max(3.0, vary(DYNO_DEFAULTS[data.metrologyModel].pressaoOleoCarga, 0.5)),
+                   pressaoTurbo: Math.round(vary(DYNO_DEFAULTS[data.metrologyModel].pressaoTurbo, 5)),
+                   tempAgua: Math.round(vary(DYNO_DEFAULTS[data.metrologyModel].tempAgua, 2))
                }}));
             };
+            
+            // Função para gerar nova "semente" visual para os gráficos, sem mudar os dados
+            const randomizeChartVisuals = () => {
+                setData(prev => ({...prev, chartSeed: Math.random()}));
+            }
 
+            // Gerador de Gráficos por Tempo (Time-based) com SEED VISUAL
             const generateTimeChart = (type) => {
                 let points = [];
-                const steps = 80, width = 600, height = 100;
+                const steps = 100; // Mais pontos para mais detalhe
+                const width = 600;
+                const height = 100;
+                // Usa a seed do estado para garantir que o gráfico mude apenas quando o usuário clicar no botão
+                const seed = data.chartSeed; 
+
+                // Função pseudo-aleatória baseada na seed (para consistência durante renderizações)
+                const seededRandom = (i) => {
+                    const x = Math.sin(seed * i * 1000) * 10000;
+                    return x - Math.floor(x);
+                }
+
                 if (type === 'idle') {
                     const target = data.dyno.rpmLenta;
                     for(let i=0; i<=steps; i++) {
                         const x = (i/steps)*width;
-                        const y = height - (((target + (Math.sin(i*0.5)*15) + (Math.random()*5)) / 1200) * height);
+                        // Cria ruído visual único baseado na seed
+                        const noiseBase = (seededRandom(i) - 0.5) * 30; 
+                        const wave = Math.sin(i * 0.2 + seed * 10) * 10; // Onda lenta variável
+                        const val = target + noiseBase + wave;
+                        const y = height - ((val / 1200) * height); 
                         points.push(`${x},${y}`);
                     }
-                } else {
-                    const target = 1800, start = 800;
+                } else { // Load
+                    const target = 1800; 
+                    const start = 800;
                     for(let i=0; i<=steps; i++) {
                         const x = (i/steps)*width;
-                        let val = i < steps*0.2 ? start + ((target-start)*(i/(steps*0.2))) : target + (Math.random()*2-1);
-                        points.push(`${x},${height - ((val/2500)*height)}`);
+                        let val;
+                        
+                        // Varia o ponto de subida da rampa com a seed
+                        const rampEnd = 0.2 + (seededRandom(99) * 0.1); // Entre 20% e 30%
+                        
+                        if (i < steps * rampEnd) {
+                            const progress = i / (steps * rampEnd);
+                            // Rampa levemente curva
+                            val = start + ((target - start) * Math.pow(progress, 0.8)); 
+                        } else {
+                            // Estabilidade com micro ruído
+                            val = target + ((seededRandom(i) - 0.5) * 5);
+                        }
+                        
+                        const y = height - ((val / 2500) * height);
+                        points.push(`${x},${y}`);
                     }
                 }
                 return points.join(' ');
@@ -356,7 +397,10 @@
                                     <input type="number" className="w-full text-[10px] border rounded p-1" placeholder="Óleo Lenta" step="0.1" value={data.dyno.pressaoOleoLenta} onChange={e=>setData({...data, dyno: {...data.dyno, pressaoOleoLenta: parseFloat(e.target.value)}})}/>
                                     <input type="number" className="w-full text-[10px] border rounded p-1" placeholder="Óleo Carga" step="0.1" value={data.dyno.pressaoOleoCarga} onChange={e=>setData({...data, dyno: {...data.dyno, pressaoOleoCarga: parseFloat(e.target.value)}})}/>
                                 </div>
-                                <button onClick={randomizeDyno} className="w-full py-1 bg-white border border-gray-300 text-gray-700 text-xs rounded hover:bg-gray-100">Randomizar Teste</button>
+                                <div className="flex gap-1">
+                                    <button onClick={randomizeDyno} className="flex-1 py-1 bg-white border border-gray-300 text-gray-700 text-xs rounded hover:bg-gray-100">Randomizar Dados</button>
+                                    <button onClick={randomizeChartVisuals} className="flex-1 py-1 bg-gray-200 border border-gray-300 text-gray-800 text-xs rounded hover:bg-gray-300 font-bold">Mudar Gráficos</button>
+                                </div>
                             </div>
                             
                             <div className="grid grid-cols-2 gap-2">
