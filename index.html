@@ -67,6 +67,7 @@
             { id: 'vitoria', city: 'VITORIA - ES', cnpj: '05.436.047/0006-20', address: 'AV JERONIMO MONTEIRO, 1000 - CENTRO' },
             { id: 'recife', city: 'RECIFE - PE', cnpj: '05.436.047/0009-73', address: 'RUA PADRE CARAPUCEIRO, 968 - BOA VIAGEM' },
             { id: 'itajai', city: 'ITAJAI - SC', cnpj: '05.436.047/0011-98', address: 'RUA MANOEL VIEIRA GARÇÃO, 10, SALA 401 - CENTRO' },
+            { id: 'macapa', city: 'MACAPÁ - PELAGIUS', cnpj: '05.436.047/0015-11', address: 'MACAPÁ - AP' }, // Adicionado do Laudo
         ];
 
         const BRANDS = {
@@ -74,7 +75,6 @@
             DEUTZ: { name: 'DEUTZ', color: 'blue', hex: '#2563eb', secondary: 'red', logoText: 'WEICHAI DEUTZ', paint: 'Azul Motor Deutz' }
         };
 
-        // TEXTOS PADRÃO (ENCHAÇÃO DE LINGUIÇA)
         const BOILERPLATE = {
             recebimento: "O motor foi recebido para desmontagem e análise preliminar. Durante o processo de recebimento, foram realizadas fotos iniciais, registrando a condição do motor no momento de sua chegada, a fim de documentar possíveis danos ou desgastes visíveis. Esses registros servirão como base para comparação com o estado final após a retífica.",
             desmontagem: "O motor foi completamente desmontado, e todas as peças foram inspecionadas minuciosamente em busca de desgastes, danos ou falhas. Durante a desmontagem, foram registrados os números de série das peças para garantir a rastreabilidade e facilitar a identificação de qualquer componente com defeito. A inspeção detalhada permite avaliar a necessidade de substituição de peças ou reparos adicionais antes de prosseguir com o processo de retífica.",
@@ -84,14 +84,31 @@
             finalizacao: "Após a conclusão dos testes de performance, o motor passou pelos acabamentos finais, que incluíram o processo de pintura para garantir a proteção contra corrosão e desgaste. A pintura foi realizada com materiais de alta qualidade, adequados para as condições de operação do motor. Após a finalização da pintura, o motor foi cuidadosamente embalado e paletizado para garantir sua segurança durante o transporte."
         };
 
-        // DADOS DE DINAMÔMETRO PADRÃO POR MODELO (ATUALIZADO)
+        // DADOS DE DINAMÔMETRO PADRÃO POR MODELO
         const DYNO_DEFAULTS = {
+            '3304': { rpmLenta: 849, rpmCarga: 1800, potencia: 155.0, torque: 350.0, pressaoOleoLenta: 2.0, pressaoOleoCarga: 4.5, pressaoTurbo: 150, tempAgua: 85 }, // Baseado na página 7/8
             '3056': { rpmLenta: 850, rpmCarga: 1800, potencia: 153.0, torque: 450.0, pressaoOleoLenta: 1.5, pressaoOleoCarga: 3.5, pressaoTurbo: 140, tempAgua: 88 },
             'C4.4': { rpmLenta: 850, rpmCarga: 1800, potencia: 145.0, torque: 425.0, pressaoOleoLenta: 1.5, pressaoOleoCarga: 3.5, pressaoTurbo: 140, tempAgua: 88 },
             'DEUTZ_6CC': { rpmLenta: 850, rpmCarga: 1800, potencia: 161.0, torque: 470.0, pressaoOleoLenta: 1.5, pressaoOleoCarga: 3.5, pressaoTurbo: 140, tempAgua: 88 }
         };
 
         const METROLOGY_PROFILES = {
+            '3304': { // Adicionado exatamente como no laudo em anexo
+                brand: 'CAT', cylinders: 4, mainBearings: 5,
+                defaults: {
+                    munhoes: [88.88, 88.88, 88.88, 88.88, 88.88],
+                    moentes: [76.17, 76.17, 76.17, 76.17],
+                    folgaMancal: [0.12, 0.12, 0.12, 0.12, 0.12],
+                    folgaBiela: [0.12, 0.12, 0.12, 0.12],
+                    alturaPistao: [0.15, 0.13, 0.22, 0.20],
+                    folgaPistao: [0.12, 0.12, 0.12, 0.12],
+                    alturaCamisa: [0.00, 0.00, 0.00, 0.00], 
+                    alturaValvula: [1.50, 1.50, 1.50, 1.50], 
+                    folgaGuia: [0.03, 0.03, 0.03, 0.03], 
+                    medidaCabecote: "STD", folgaAxial: 0.30,
+                    folgaBuchaComando: [0.11, 0.11, 0.11, 0.11]
+                }
+            },
             '3056': {
                 brand: 'CAT', cylinders: 6, mainBearings: 7,
                 defaults: {
@@ -141,6 +158,29 @@
                 }
             }
         };
+
+        const PARTS_LIST_3304 = [ // Lista transcrita exata do Laudo CAT 3304
+            "Kits de Cilindro Metal Leve - 4 un", "Bronzinas de Biela Caterpillar - 1 un",
+            "Bronzinas de Mancal Caterpillar - 1 un", "Bucha Comando Caterpillar - 1 un",
+            "Bucha de Biela Trapezontal Caterpillar - 4 un", "Guias de Válvulas Caterpillar - 8 un",
+            "Válvulas de Admissão Caterpillar - 4 un", "Válvulas de Escape Caterpillar - 4 un",
+            "Vedador de Válvula Caterpillar - 8 un", "Molas de Válvulas - 8 un",
+            "Girador de Molas Caterpillar - 8 un", "Trava de Válvulas Caterpillar - 16 un",
+            "Tucho de Válvulas Caterpillar - 8 un", "Varetas de Válvulas Caterpillar - 8 un",
+            "Jogo de Junta S/Vedador S/Retentor - 1 un", "Bomba de Óleo Caterpillar - 1 un",
+            "Bomba de Água Caterpillar - 1 un", "Polia Dianteira Caterpillar - 1 un",
+            "Turbina Reman Caterpillar - 1 un", "Trocador de Óleo Caterpillar - 1 un",
+            "Jogo Bucha Contra-Balanço Caterpillar - 1 un", "Filtro de Óleo Caterpillar - 1 un",
+            "Filtro Diesel Caterpillar - 1 un", "Bicos Injetores Delphi - 4 un",
+            "Parafuso de Bielas/Porcas Caterpillar - 8 un", "Retentor Dianteiro Caterpillar - 1 un",
+            "Retentor Traseiro com Pista Caterpillar - 1 un", "Válvula Termostática Caterpillar - 1 un",
+            "Comando de Válvulas Caterpillar - 1 un", "Kit Reparo Bomba Injetora Caterpillar - 1 un",
+            "Eixo Acionamento Estrangulador Bomba Inj. - 1 un", "Eixo Acelerador Bomba Injetora - 1 un",
+            "Tampa de Fechamento Horímetro - 1 un", "Óleo 15W40 Caterpillar - 1 un",
+            "Tinta Amarela Caterpillar - 1 un", "Thynner - 4 un",
+            "Bloco do Motor Caterpillar 3304 - 1 un", "Eixo Balanceador Caterpillar - 2 un",
+            "Placa Espaçadora Caterpillar - 1 un", "Pescador de Óleo Caterpillar - 1 un"
+        ];
 
         const PARTS_LIST_CAT = [
             "Camisa de Cilindro Caterpillar - Jogo", "Kits de Cilindro Caterpillar - Jogo", "Jet Oil Caterpillar - Jogo", "Parafuso Jet Oil Caterpillar - Jogo",
@@ -204,11 +244,11 @@
 
         function App() {
             const [data, setData] = useState({
-                os: '14937', engineModel: 'CAT 3056', engineSerial: 'GSN01018', branchId: 'riogrande',
-                reportDate: getTodayDate(), metrologyDate: getTodayDate(), observations: '',
-                metrologyModel: '3056', metrology: JSON.parse(JSON.stringify(METROLOGY_PROFILES['3056'].defaults)),
-                dyno: JSON.parse(JSON.stringify(DYNO_DEFAULTS['3056'])),
-                chartSeed: Math.random() // Semente para variação visual dos gráficos
+                os: '14725', engineModel: 'CAT 3304', engineSerial: '83Z12360', branchId: 'macapa', // Defaults do PDF inseridos aqui
+                reportDate: '2025-05-09', metrologyDate: '2025-05-09', observations: '',
+                metrologyModel: '3304', metrology: JSON.parse(JSON.stringify(METROLOGY_PROFILES['3304'].defaults)),
+                dyno: JSON.parse(JSON.stringify(DYNO_DEFAULTS['3304'])),
+                chartSeed: Math.random() 
             });
             const [images, setImages] = useState({});
             const [validationHash, setValidationHash] = useState('');
@@ -219,20 +259,26 @@
 
             const currentProfile = METROLOGY_PROFILES[data.metrologyModel];
             const currentBrand = BRANDS[currentProfile.brand];
-            const currentPartsList = currentBrand.name === 'DEUTZ' ? PARTS_LIST_DEUTZ : (data.metrologyModel === 'C4.4' ? PARTS_LIST_C44 : PARTS_LIST_CAT);
+            
+            let currentPartsList;
+            if (currentBrand.name === 'DEUTZ') currentPartsList = PARTS_LIST_DEUTZ;
+            else if (data.metrologyModel === 'C4.4') currentPartsList = PARTS_LIST_C44;
+            else if (data.metrologyModel === '3304') currentPartsList = PARTS_LIST_3304;
+            else currentPartsList = PARTS_LIST_CAT;
+
             const currentBranch = SAAM_BRANCHES.find(b => b.id === data.branchId) || SAAM_BRANCHES[0];
 
             useEffect(() => {
                 document.title = `Laudo_${currentBrand.name}_${data.metrologyModel}_OS${data.os}.pdf`;
-            }, [data]);
+            }, [data, currentBrand.name]);
 
             const handleModelChange = (newModel) => {
                 const newProfile = METROLOGY_PROFILES[newModel];
                 setData(prev => ({
                     ...prev, metrologyModel: newModel,
-                    engineModel: newModel === 'C4.4' ? 'CAT C4.4' : newModel === '3056' ? 'CAT 3056' : 'DEUTZ WP6',
+                    engineModel: newModel === 'C4.4' ? 'CAT C4.4' : newModel === '3056' ? 'CAT 3056' : newModel === '3304' ? 'CAT 3304' : 'DEUTZ WP6',
                     metrology: JSON.parse(JSON.stringify(newProfile.defaults)),
-                    dyno: JSON.parse(JSON.stringify(DYNO_DEFAULTS[newModel] || DYNO_DEFAULTS['3056']))
+                    dyno: JSON.parse(JSON.stringify(DYNO_DEFAULTS[newModel] || DYNO_DEFAULTS['3304']))
                 }));
             };
 
@@ -258,8 +304,8 @@
                setData(prev => ({...prev, dyno: {
                    rpmLenta: Math.round(vary(DYNO_DEFAULTS[data.metrologyModel].rpmLenta, 20)),
                    rpmCarga: Math.round(vary(DYNO_DEFAULTS[data.metrologyModel].rpmCarga, 30)),
-                   potencia: vary(DYNO_DEFAULTS[data.metrologyModel].potencia, 2), // Variação pequena na potência
-                   torque: vary(DYNO_DEFAULTS[data.metrologyModel].torque, 5),     // Variação pequena no torque
+                   potencia: vary(DYNO_DEFAULTS[data.metrologyModel].potencia, 2), 
+                   torque: vary(DYNO_DEFAULTS[data.metrologyModel].torque, 5),     
                    pressaoOleoLenta: Math.max(1.25, vary(DYNO_DEFAULTS[data.metrologyModel].pressaoOleoLenta, 0.3)),
                    pressaoOleoCarga: Math.max(3.0, vary(DYNO_DEFAULTS[data.metrologyModel].pressaoOleoCarga, 0.5)),
                    pressaoTurbo: Math.round(vary(DYNO_DEFAULTS[data.metrologyModel].pressaoTurbo, 5)),
@@ -267,21 +313,17 @@
                }}));
             };
             
-            // Função para gerar nova "semente" visual para os gráficos, sem mudar os dados
             const randomizeChartVisuals = () => {
                 setData(prev => ({...prev, chartSeed: Math.random()}));
             }
 
-            // Gerador de Gráficos por Tempo (Time-based) com SEED VISUAL
             const generateTimeChart = (type) => {
                 let points = [];
-                const steps = 100; // Mais pontos para mais detalhe
+                const steps = 100; 
                 const width = 600;
                 const height = 100;
-                // Usa a seed do estado para garantir que o gráfico mude apenas quando o usuário clicar no botão
                 const seed = data.chartSeed; 
 
-                // Função pseudo-aleatória baseada na seed (para consistência durante renderizações)
                 const seededRandom = (i) => {
                     const x = Math.sin(seed * i * 1000) * 10000;
                     return x - Math.floor(x);
@@ -291,29 +333,25 @@
                     const target = data.dyno.rpmLenta;
                     for(let i=0; i<=steps; i++) {
                         const x = (i/steps)*width;
-                        // Cria ruído visual único baseado na seed
                         const noiseBase = (seededRandom(i) - 0.5) * 30; 
-                        const wave = Math.sin(i * 0.2 + seed * 10) * 10; // Onda lenta variável
+                        const wave = Math.sin(i * 0.2 + seed * 10) * 10; 
                         const val = target + noiseBase + wave;
                         const y = height - ((val / 1200) * height); 
                         points.push(`${x},${y}`);
                     }
-                } else { // Load
+                } else { 
                     const target = 1800; 
                     const start = 800;
                     for(let i=0; i<=steps; i++) {
                         const x = (i/steps)*width;
                         let val;
                         
-                        // Varia o ponto de subida da rampa com a seed
-                        const rampEnd = 0.2 + (seededRandom(99) * 0.1); // Entre 20% e 30%
+                        const rampEnd = 0.2 + (seededRandom(99) * 0.1); 
                         
                         if (i < steps * rampEnd) {
                             const progress = i / (steps * rampEnd);
-                            // Rampa levemente curva
                             val = start + ((target - start) * Math.pow(progress, 0.8)); 
                         } else {
-                            // Estabilidade com micro ruído
                             val = target + ((seededRandom(i) - 0.5) * 5);
                         }
                         
@@ -377,10 +415,11 @@
 
                             <div className="bg-blue-50 p-3 rounded border border-blue-200">
                                 <label className="text-xs font-bold text-blue-800 block mb-2">MOTOR / MARCA</label>
-                                <div className="flex gap-1 mb-2">
-                                    <button onClick={() => handleModelChange('3056')} className={`flex-1 text-[10px] p-1 rounded border ${data.metrologyModel==='3056'?'bg-yellow-500 text-white':'bg-white'}`}>CAT 3056</button>
-                                    <button onClick={() => handleModelChange('C4.4')} className={`flex-1 text-[10px] p-1 rounded border ${data.metrologyModel==='C4.4'?'bg-yellow-500 text-white':'bg-white'}`}>CAT C4.4</button>
-                                    <button onClick={() => handleModelChange('DEUTZ_6CC')} className={`flex-1 text-[10px] p-1 rounded border ${data.metrologyModel==='DEUTZ_6CC'?'bg-blue-600 text-white':'bg-white'}`}>DEUTZ</button>
+                                <div className="grid grid-cols-2 gap-1 mb-2">
+                                    <button onClick={() => handleModelChange('3304')} className={`text-[10px] p-1 rounded border ${data.metrologyModel==='3304'?'bg-yellow-500 text-white':'bg-white'}`}>CAT 3304</button>
+                                    <button onClick={() => handleModelChange('3056')} className={`text-[10px] p-1 rounded border ${data.metrologyModel==='3056'?'bg-yellow-500 text-white':'bg-white'}`}>CAT 3056</button>
+                                    <button onClick={() => handleModelChange('C4.4')} className={`text-[10px] p-1 rounded border ${data.metrologyModel==='C4.4'?'bg-yellow-500 text-white':'bg-white'}`}>CAT C4.4</button>
+                                    <button onClick={() => handleModelChange('DEUTZ_6CC')} className={`text-[10px] p-1 rounded border ${data.metrologyModel==='DEUTZ_6CC'?'bg-blue-600 text-white':'bg-white'}`}>DEUTZ</button>
                                 </div>
                                 <div className="mb-2">
                                    <label className="text-[10px] uppercase text-gray-500">Medida Cabeçote</label>
